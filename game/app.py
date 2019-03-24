@@ -14,8 +14,16 @@ class GameApp(ShowBase):
         ShowBase.__init__(self)
         pman.shim.init(self)
         self.accept('escape', sys.exit)
+        self.disable_mouse()
 
         self.world = World()
+        self.world.root.reparent_to(self.render)
+
+        self.task_mgr.add(self.process_world)
 
     def __del__(self):
         core.unload_prc_file(self.settings)
+
+    def process_world(self, task):
+        self.world.process(globalClock.dt)
+        return task.cont
