@@ -1,0 +1,13 @@
+__pycache__/
+*.py[co]
+
+*.blend1
+*.blend2
+
+/build/
+/screenshot-*.jpg
+
+/*.core
+/core
+
+/.pman.user

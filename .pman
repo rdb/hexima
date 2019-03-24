@@ -1,0 +1,16 @@
+[build]
+asset_dir = "assets/"
+export_dir = "game/assets/"
+ignore_patterns = [ "*.blend1", "*.blend2",]
+converters = [ "blend2bam", "native2bam",]
+
+[general]
+name = "Six"
+renderer = "basic"
+material_mode = "legacy"
+physics_engine = "builtin"
+
+[run]
+main_file = "run_game.py"
+auto_build = true
+auto_save = true

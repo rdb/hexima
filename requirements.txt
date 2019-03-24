@@ -1,0 +1,4 @@
+--extra-index-url https://archive.panda3d.org/branches/master
+panda3d
+panda3d_pman
+esper
