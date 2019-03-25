@@ -29,7 +29,7 @@ class World(esper.World):
         player = self.create_entity()
         self.add_component(player, components.Spatial(parent=self.root, pos=self.level.entrance))
         self.add_component(player, components.Die())
-        self.add_component(player, components.Model("box.egg", offset=(-0.5, -0.5, -0.5), scale=(1, 1, 1)))
+        self.add_component(player, components.Model("gfx/d6/d6.bam", offset=(0, 0, -0.5), scale=1.0/7.0))
 
         self.add_processor(processors.PlayerControl(player))
 

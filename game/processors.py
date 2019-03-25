@@ -41,6 +41,7 @@ class PlayerControl(esper.Processor, DirectObject):
         die.move_right()
 
     def start_move(self, dir):
+        die = self.world.component_for_entity(self.player, components.Die)
         spatial = self.world.component_for_entity(self.player, components.Spatial)
 
         target_pos = spatial.path.get_pos()
@@ -61,6 +62,16 @@ class PlayerControl(esper.Processor, DirectObject):
         x, y = int(target_pos[0]), int(target_pos[1])
         if self.world.level.check_obstacle(x, y):
             return False
+
+        if dir == 'N':
+            die.die.rotate_north()
+        elif dir == 'E':
+            die.die.rotate_east()
+        elif dir == 'S':
+            die.die.rotate_south()
+        elif dir == 'W':
+            die.die.rotate_west()
+        print(die.die.top_number)
 
         self.moving = True
         Sequence(

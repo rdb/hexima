@@ -4,20 +4,20 @@ from random import randint
 
 
 sequences = [
-    (2, 3, 5, 4),
+    (5, 3, 2, 4),
     (1, 4, 6, 3),
-    (1, 2, 6, 5),
     (1, 5, 6, 2),
+    (1, 2, 6, 5),
     (1, 3, 6, 4),
-    (2, 4, 5, 3),
+    (5, 4, 2, 3),
 ]
 
 
 class Die(object):
     def __init__(self):
         self.top_number = 1
-        self.east_number = 2
-        self.north_number = 3
+        self.east_number = 4
+        self.north_number = 5
 
     def rotate_to(self, top_number, twist=0):
         assert top_number >= 1 and top_number <= 6

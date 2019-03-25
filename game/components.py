@@ -39,19 +39,15 @@ class Die:
         self.moves = []
 
     def move_up(self):
-        self.die.rotate_north()
         self.moves.append('N')
 
     def move_down(self):
-        self.die.rotate_south()
         self.moves.append('S')
 
     def move_left(self):
-        self.die.rotate_west()
         self.moves.append('W')
 
     def move_right(self):
-        self.die.rotate_east()
         self.moves.append('E')
 
 
