@@ -4,16 +4,22 @@ tile_models = {
     '+': 'box',
 }
 
+passable = ' .s'
+
 
 class Level:
     def __init__(self):
         self.rows = []
+        self.entrance = (0, 0)
 
     def read(self, fn):
         self.rows.clear()
 
         for line in open(fn, 'r').readlines():
-            self.rows.append(line.rstrip())
+            line = line.rstrip()
+            if 's' in line:
+                self.entrance = line.index('s'), len(self.rows)
+            self.rows.append(line)
 
     def find_tile(self, type):
         "Returns the coordinates of the first tile with the given type."
@@ -30,8 +36,14 @@ class Level:
                     if model:
                         yield (x, y, model)
 
-    def get_tile(self, row, col):
-        tile = self.rows[row][col]
+    def get_tile(self, x, y):
+        tile = self.rows[y][x]
         if tile.isspace():
             return
         return tile_models.get(tile)
+
+    def check_obstacle(self, x, y):
+        if x < 0 or y < 0:
+            return True
+        tile = self.rows[y][x]
+        return tile not in passable

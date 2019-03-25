@@ -58,6 +58,10 @@ class PlayerControl(esper.Processor, DirectObject):
             target_pos.x -= 1
             target_quat *= core.LRotation((0, 1, 0), -90)
 
+        x, y = int(target_pos[0]), int(target_pos[1])
+        if self.world.level.check_obstacle(x, y):
+            return False
+
         self.moving = True
         Sequence(
             Parallel(
@@ -65,6 +69,8 @@ class PlayerControl(esper.Processor, DirectObject):
                 spatial.path.quatInterval(0.25, target_quat),
             ),
             Func(self.stop_move)).start()
+
+        return True
 
     def stop_move(self):
         self.moving = False
@@ -77,4 +83,5 @@ class PlayerControl(esper.Processor, DirectObject):
         spatial = self.world.component_for_entity(self.player, components.Spatial)
 
         if die.moves:
-            self.start_move(die.moves.pop(0))
+            if not self.start_move(die.moves.pop(0)):
+                die.moves.clear()

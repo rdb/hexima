@@ -18,8 +18,8 @@ class World(esper.World):
         camera = self.create_entity()
         self.add_component(camera, components.Camera(base.camera, fov=90, pos=(-1, -1, 10), look_at=(5, 5, 0)))
 
-        self.load_level("test")
         self.level = None
+        self.load_level("test")
 
         self.tiles = []
 
@@ -27,7 +27,7 @@ class World(esper.World):
 
         # Add player
         player = self.create_entity()
-        self.add_component(player, components.Spatial(parent=self.root))
+        self.add_component(player, components.Spatial(parent=self.root, pos=self.level.entrance))
         self.add_component(player, components.Die())
         self.add_component(player, components.Model("box.egg", offset=(-0.5, -0.5, -0.5), scale=(1, 1, 1)))
 
