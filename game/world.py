@@ -25,6 +25,14 @@ class World(esper.World):
 
         self.add_processor(processors.Movement())
 
+        # Add player
+        player = self.create_entity()
+        self.add_component(player, components.Spatial(parent=self.root))
+        self.add_component(player, components.Die())
+        self.add_component(player, components.Model("box.egg", offset=(-0.5, -0.5, -0.5), scale=(1, 1, 1)))
+
+        self.add_processor(processors.PlayerControl(player))
+
     def load_level(self, name):
         level_dir = os.path.join(os.path.dirname(__file__), '..', 'levels')
         level = Level()
@@ -35,4 +43,4 @@ class World(esper.World):
             tile = self.create_entity()
 
             self.add_component(tile, components.Spatial("tile", parent=self.root, pos=(x, y)))
-            self.add_component(tile, components.Model(type + ".egg", scale=(1, 1, 1)))
+            self.add_component(tile, components.Model(type + ".egg", offset=(-0.5, -0.5, -0.5), scale=(1, 1, 1)))
