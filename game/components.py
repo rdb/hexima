@@ -142,3 +142,24 @@ class Sun:
         lens.set_film_offset((bmin.xz + bmax.xz) * 0.5)
         lens.set_film_size(bmax.xz - bmin.xz)
         lens.set_near_far(bmin.y, bmax.y)
+
+
+class Symbol:
+    def __init__(self, text="", font=None, color=None):
+        self.node = core.TextNode("")
+        self.node.text = text
+        self.node.align = core.TextNode.A_center
+
+        if font is not None:
+            self.node.font = font
+
+        if color is not None:
+            self.node.text_color = color
+
+    def setup(self, world, ent):
+        spatial = world.component_for_entity(ent, Spatial)
+        path = spatial.path.attach_new_node(self.node)
+        path.set_shader_off(1)
+        path.set_light_off(1)
+        path.set_hpr(0, -90, 0)
+        path.set_pos(0, -0.3, -0.499)

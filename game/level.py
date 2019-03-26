@@ -21,6 +21,12 @@ class TileType(Enum):
         else:
             return True
 
+    def get_symbol(self):
+        if self.value in '123456':
+            return chr(0x2680 + ord(self.value) - ord('1'))
+        else:
+            return ''
+
 
 class Level:
     def __init__(self):
