@@ -6,7 +6,7 @@ converters = [ "blend2bam", "native2bam",]
 
 [general]
 name = "Six"
-renderer = "basic"
+renderer = "none"
 material_mode = "legacy"
 physics_engine = "builtin"
 
