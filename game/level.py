@@ -3,7 +3,8 @@ tile_models = {
     #TODO?: Randomly select from tile types (e.g. grass tiles, sand tiles)
     '.': 'gfx/tiles/tile-grass-blank',
     ',': 'gfx/tiles/tile-sand-blank',
-    '+': 'gfx/tiles/tile-wall-1',
+    'b': 'gfx/tiles/tile-sand-blank',
+    'e': 'gfx/tiles/tile-sand-blank',
     '1': 'gfx/tiles/tile-d6-1',
     '2': 'gfx/tiles/tile-d6-2',
     '3': 'gfx/tiles/tile-d6-3',
