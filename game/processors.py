@@ -46,21 +46,26 @@ class PlayerControl(esper.Processor, DirectObject):
 
         target_pos = spatial.path.get_pos()
         target_quat = spatial.path.get_quat()
+        next_number = None
         if dir == 'N':
             target_pos.y += 1
             target_quat *= core.LRotation((1, 0, 0), -90)
+            next_number = die.die.north_number
         elif dir == 'E':
             target_pos.x += 1
             target_quat *= core.LRotation((0, 1, 0), 90)
+            next_number = die.die.east_number
         elif dir == 'S':
             target_pos.y -= 1
             target_quat *= core.LRotation((1, 0, 0), 90)
+            next_number = die.die.south_number
         elif dir == 'W':
             target_pos.x -= 1
             target_quat *= core.LRotation((0, 1, 0), -90)
+            next_number = die.die.west_number
 
         x, y = int(target_pos[0]), int(target_pos[1])
-        if self.world.level.check_obstacle(x, y, die.die.bottom_number):
+        if self.world.level.check_obstacle(x, y, next_number):
             return False
 
         if dir == 'N':

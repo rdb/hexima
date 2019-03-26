@@ -4,6 +4,8 @@ tile_models = {
     '.': 'gfx/tiles/tile-grass-blank',
     ',': 'gfx/tiles/tile-sand-blank',
     '+': 'gfx/tiles/tile-wall-1',
+    '1': 'gfx/tiles/tile-d6-1',
+    '6': 'gfx/tiles/tile-d6-6',
 }
 
 passable = '.,be'
@@ -19,7 +21,7 @@ class Level:
 
         for line in open(fn, 'r').readlines():
             line = line.rstrip()
-            if 's' in line:
+            if 'b' in line:
                 self.entrance = line.index('b'), len(self.rows)
             self.rows.append(line)
 
@@ -48,6 +50,6 @@ class Level:
         if x < 0 or y < 0:
             return True
         tile = self.rows[y][x]
-        if tile != str(dieval):
-            return True
+        if tile == str(dieval):
+            return False
         return tile not in passable
