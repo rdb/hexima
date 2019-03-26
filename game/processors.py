@@ -1,7 +1,8 @@
 from direct.showbase.DirectObject import DirectObject
-from direct.interval.IntervalGlobal import LerpPosInterval, Func, Sequence, Parallel
+from direct.interval.IntervalGlobal import LerpFunctionInterval, Func, Sequence, Parallel
 from panda3d import core
 import esper
+import math
 
 from . import components
 
@@ -79,9 +80,12 @@ class PlayerControl(esper.Processor, DirectObject):
         print(die.die.top_number)
 
         self.moving = True
+
+        z_scale = math.sqrt(0.5) - 0.5
         Sequence(
             Parallel(
                 spatial.path.posInterval(0.25, target_pos),
+                LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.25, toData=math.pi),
                 spatial.path.quatInterval(0.25, target_quat),
             ),
             Func(self.stop_move)).start()
