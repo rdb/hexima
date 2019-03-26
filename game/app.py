@@ -16,6 +16,8 @@ class GameApp(ShowBase):
         self.accept('escape', sys.exit)
         self.disable_mouse()
 
+        self.set_background_color((0.31, 0.42, 0.53))
+
         self.world = World()
         self.world.root.reparent_to(self.render)
 
