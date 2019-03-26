@@ -5,7 +5,13 @@ tile_models = {
     ',': 'gfx/tiles/tile-sand-blank',
     '+': 'gfx/tiles/tile-wall-1',
     '1': 'gfx/tiles/tile-d6-1',
+    '2': 'gfx/tiles/tile-d6-2',
+    '3': 'gfx/tiles/tile-d6-3',
+    '4': 'gfx/tiles/tile-d6-4',
+    '5': 'gfx/tiles/tile-d6-5',
     '6': 'gfx/tiles/tile-d6-6',
+    'b': 'gfx/tiles/tile-d6-blank',
+    'e': 'gfx/tiles/tile-d6-blank'
 }
 
 passable = '.,be'
@@ -49,7 +55,10 @@ class Level:
     def check_obstacle(self, x, y, dieval):
         if x < 0 or y < 0:
             return True
-        tile = self.rows[y][x]
+        try:
+            tile = self.rows[y][x]
+        except IndexError:
+            return True
         if tile == str(dieval):
             return False
         return tile not in passable
