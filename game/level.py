@@ -1,10 +1,12 @@
 
 tile_models = {
-    '.': None,
-    '+': 'box',
+    #TODO?: Randomly select from tile types (e.g. grass tiles, sand tiles)
+    '.': 'gfx/tiles/tile-grass-blank',
+    ',': 'gfx/tiles/tile-sand-blank',
+    '+': 'gfx/tiles/tile-wall-1',
 }
 
-passable = ' .s'
+passable = '.,be'
 
 
 class Level:
@@ -18,7 +20,7 @@ class Level:
         for line in open(fn, 'r').readlines():
             line = line.rstrip()
             if 's' in line:
-                self.entrance = line.index('s'), len(self.rows)
+                self.entrance = line.index('b'), len(self.rows)
             self.rows.append(line)
 
     def find_tile(self, type):

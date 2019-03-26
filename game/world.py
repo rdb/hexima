@@ -16,10 +16,10 @@ class World(esper.World):
 
         # Create camera entity
         camera = self.create_entity()
-        self.add_component(camera, components.Camera(base.camera, fov=90, pos=(-1, -1, 10), look_at=(5, 5, 0)))
+        self.add_component(camera, components.Camera(base.camera, fov=90, pos=(-1, -1, 20), look_at=(5, 5, 0)))
 
         self.level = None
-        self.load_level("test")
+        self.load_level("level0")
 
         self.tiles = []
 
@@ -43,4 +43,4 @@ class World(esper.World):
             tile = self.create_entity()
 
             self.add_component(tile, components.Spatial("tile", parent=self.root, pos=(x, y)))
-            self.add_component(tile, components.Model(type + ".egg", offset=(-0.5, -0.5, -0.5), scale=(1, 1, 1)))
+            self.add_component(tile, components.Model(type + ".bam", offset=(-0.5, -0.5, -0.5), scale=(1, 1, 1)))
