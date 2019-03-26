@@ -44,8 +44,10 @@ class Level:
             return
         return tile_models.get(tile)
 
-    def check_obstacle(self, x, y):
+    def check_obstacle(self, x, y, dieval):
         if x < 0 or y < 0:
             return True
         tile = self.rows[y][x]
+        if tile != str(dieval):
+            return True
         return tile not in passable

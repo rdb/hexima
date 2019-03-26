@@ -60,7 +60,7 @@ class PlayerControl(esper.Processor, DirectObject):
             target_quat *= core.LRotation((0, 1, 0), -90)
 
         x, y = int(target_pos[0]), int(target_pos[1])
-        if self.world.level.check_obstacle(x, y):
+        if self.world.level.check_obstacle(x, y, die.die.bottom_number):
             return False
 
         if dir == 'N':
