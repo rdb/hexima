@@ -1,21 +1,25 @@
+__all__ = ["Level", "TileType"]
 
-tile_models = {
-    #TODO?: Randomly select from tile types (e.g. grass tiles, sand tiles)
-    '.': 'gfx/tiles/tile-grass-blank',
-    ',': 'gfx/tiles/tile-sand-blank',
-    'b': 'gfx/tiles/tile-sand-blank',
-    'e': 'gfx/tiles/tile-sand-blank',
-    '1': 'gfx/tiles/tile-d6-1',
-    '2': 'gfx/tiles/tile-d6-2',
-    '3': 'gfx/tiles/tile-d6-3',
-    '4': 'gfx/tiles/tile-d6-4',
-    '5': 'gfx/tiles/tile-d6-5',
-    '6': 'gfx/tiles/tile-d6-6',
-    'b': 'gfx/tiles/tile-d6-blank',
-    'e': 'gfx/tiles/tile-d6-blank'
-}
+from enum import Enum
 
-passable = '.,be'
+
+class TileType(Enum):
+    entrance = 'b'
+    exit = 'e'
+    gate1 = '1'
+    gate2 = '2'
+    gate3 = '3'
+    gate4 = '4'
+    gate5 = '5'
+    gate6 = '6'
+    blank = '.'
+    blank2 = ','
+
+    def is_passable(self, dieval):
+        if self.value in '123456':
+            return int(self.value) == int(dieval)
+        else:
+            return True
 
 
 class Level:
@@ -43,7 +47,7 @@ class Level:
         for y, row in enumerate(self.rows):
             for x, tile in enumerate(row):
                 if not tile.isspace():
-                    model = tile_models.get(tile)
+                    model = TileType(tile)
                     if model:
                         yield (x, y, model)
 
@@ -51,15 +55,18 @@ class Level:
         tile = self.rows[y][x]
         if tile.isspace():
             return
-        return tile_models.get(tile)
+        return TileType(tile)
 
-    def check_obstacle(self, x, y, dieval):
+    def check_obstacle(self, x, y, dieval=None):
         if x < 0 or y < 0:
             return True
         try:
-            tile = self.rows[y][x]
+            v = self.rows[y][x]
         except IndexError:
             return True
-        if tile == str(dieval):
-            return False
-        return tile not in passable
+
+        if v.isspace():
+            return True
+
+        tile = TileType(v)
+        return not tile.is_passable(dieval)
