@@ -43,4 +43,6 @@ class World(esper.World):
             tile = self.create_entity()
 
             self.add_component(tile, components.Spatial("tile", parent=self.root, pos=(x, y)))
-            self.add_component(tile, components.Model(type + ".bam", offset=(-0.5, -0.5, -0.5), scale=(1, 1, 1)))
+            self.add_component(tile, components.Model(type + ".bam",
+                offset=(0, 0, -0.5 - 1.0 / 7.0),
+                scale=(1.0 / 7, 1.0 / 7, 1.0 / 7)))
