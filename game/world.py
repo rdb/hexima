@@ -8,6 +8,8 @@ from .level import Level
 import os
 from random import random
 
+DEFAULT_LVL = "level8"
+
 
 class World(esper.World):
     def __init__(self):
@@ -19,7 +21,7 @@ class World(esper.World):
         self.root = core.NodePath("world")
 
         self.level = None
-        self.load_level("level0")
+        self.load_level(DEFAULT_LVL)
 
         self.tiles = []
 
