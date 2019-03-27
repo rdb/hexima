@@ -14,8 +14,11 @@ class TileType(Enum):
     gate6 = '6'
     blank = '.'
     blank2 = ','
+    void = None
 
     def is_passable(self, dieval):
+        if self.value is None:
+            return False
         if self.value in '123456':
             return int(self.value) == int(dieval)
         else:
@@ -26,6 +29,12 @@ class TileType(Enum):
             return chr(0x2680 + ord(self.value) - ord('1'))
         else:
             return ''
+
+    def get_color(self):
+        if self.value == 'e':
+            return (0.5, 1, 0.5, 1.0)
+        else:
+            return (1, 1, 1, 1)
 
 
 class Level:
@@ -58,9 +67,16 @@ class Level:
                         yield (x, y, model)
 
     def get_tile(self, x, y):
+        if x < 0 or y < 0:
+            return True
+        try:
+            v = self.rows[y][x]
+        except IndexError:
+            return TileType.void
+
         tile = self.rows[y][x]
         if tile.isspace():
-            return
+            return TileType.void
         return TileType(tile)
 
     def check_obstacle(self, x, y, dieval=None):

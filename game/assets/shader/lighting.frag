@@ -20,6 +20,8 @@ in vec3 norm;
 in vec4 shad[1];
 in vec3 col;
 
+uniform vec4 p3d_ColorScale;
+
 out vec4 p3d_FragColor;
 
 void main() {
@@ -66,6 +68,8 @@ void main() {
 
     p3d_FragColor.rgb += color;
   }
+
+  p3d_FragColor.rgb *= p3d_ColorScale.rgb;
 
   p3d_FragColor.a = 1;
 }

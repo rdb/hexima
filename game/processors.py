@@ -4,6 +4,7 @@ from panda3d import core
 import esper
 import math
 
+from .level import TileType
 from . import components
 
 
@@ -16,21 +17,35 @@ class PlayerControl(esper.Processor, DirectObject):
         self.accept('arrow_left', self.move_left)
         self.accept('arrow_right', self.move_right)
 
+        self.locked = True
         self.moving = False
+        self.winning_move = False
+
+    def unlock(self):
+        self.locked = False
+        assert self.world.level
 
     def move_up(self):
+        if self.locked:
+            return
         die = self.world.component_for_entity(self.player, components.Die)
         die.move_up()
 
     def move_down(self):
+        if self.locked:
+            return
         die = self.world.component_for_entity(self.player, components.Die)
         die.move_down()
 
     def move_left(self):
+        if self.locked:
+            return
         die = self.world.component_for_entity(self.player, components.Die)
         die.move_left()
 
     def move_right(self):
+        if self.locked:
+            return
         die = self.world.component_for_entity(self.player, components.Die)
         die.move_right()
 
@@ -38,6 +53,8 @@ class PlayerControl(esper.Processor, DirectObject):
         die = self.world.component_for_entity(self.player, components.Die)
         spatial = self.world.component_for_entity(self.player, components.Spatial)
 
+        orig_pos = spatial.path.get_pos()
+        orig_quat = spatial.path.get_quat()
         target_pos = spatial.path.get_pos()
         target_quat = spatial.path.get_quat()
         next_number = None
@@ -58,9 +75,29 @@ class PlayerControl(esper.Processor, DirectObject):
             target_quat *= core.LRotation((0, 1, 0), -90)
             next_number = die.die.west_number
 
+        z_scale = math.sqrt(0.5) - 0.5
+
         x, y = int(target_pos[0]), int(target_pos[1])
-        if self.world.level.check_obstacle(x, y, next_number):
+        type = self.world.level.get_tile(x, y)
+        if not type.is_passable(next_number):
+            self.moving = True
+            Sequence(
+                Parallel(
+                    spatial.path.posInterval(0.125, (orig_pos + target_pos) * 0.5, blendType='easeInOut'),
+                    LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.125, toData=math.pi * 0.5, blendType='easeInOut'),
+                    spatial.path.quatInterval(0.125, (orig_quat + target_quat) * 0.5, blendType='easeInOut'),
+                ),
+                Parallel(
+                    spatial.path.posInterval(0.125, orig_pos, blendType='easeIn'),
+                    LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.125, fromData=math.pi * 0.5, toData=0, blendType='easeIn'),
+                    spatial.path.quatInterval(0.125, orig_quat, blendType='easeIn'),
+                ),
+                Func(self.stop_move)).start()
             return False
+
+        if type == TileType.exit:
+            self.locked = True
+            self.winning_move = True
 
         if dir == 'N':
             die.die.rotate_north()
@@ -70,11 +107,9 @@ class PlayerControl(esper.Processor, DirectObject):
             die.die.rotate_south()
         elif dir == 'W':
             die.die.rotate_west()
-        print(die.die.top_number)
 
         self.moving = True
 
-        z_scale = math.sqrt(0.5) - 0.5
         Sequence(
             Parallel(
                 spatial.path.posInterval(0.25, target_pos),
@@ -86,10 +121,15 @@ class PlayerControl(esper.Processor, DirectObject):
         return True
 
     def stop_move(self):
+        if self.winning_move:
+            self.locked = True
+            self.world.win_level()
+            self.winning_move = False
+
         self.moving = False
 
     def process(self, dt):
-        if self.moving:
+        if self.locked or self.moving:
             return
 
         die = self.world.component_for_entity(self.player, components.Die)
