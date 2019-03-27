@@ -8,7 +8,7 @@ from .level import Level, TileType
 from direct.interval.IntervalGlobal import LerpFunctionInterval, Func, Sequence, Parallel
 
 import os
-from random import random
+from random import random, randint
 
 
 class World(esper.World):
@@ -19,7 +19,7 @@ class World(esper.World):
 
         self.level = None
 
-        self.tiles = []
+        self.tiles = {}
         self.next_levels = []
 
         # Add player
@@ -93,7 +93,7 @@ class World(esper.World):
         self.level_root = level_root
 
         # Make previous tiles fall away
-        #for tile in self.tiles:
+        #for tile in self.tiles.values():
         #    self.add_component(tile, components.Falling(drag=random() + 0.5))
 
         self.tiles.clear()
@@ -111,7 +111,7 @@ class World(esper.World):
             if type == TileType.exit:
                 exit_tile = tile
 
-            self.tiles.append(tile)
+            self.tiles[(x, y)] = tile
 
         # Reposition player and the exit tile they rode in on
         spatial = self.component_for_entity(self.player, components.Spatial)
@@ -144,8 +144,9 @@ class World(esper.World):
 
         spatial = components.Spatial("tile", parent=self.level_root, pos=(x, y))
         self.add_component(tile, spatial)
-        self.add_component(tile, components.Model("gfx/tile.bam", offset=(0, 0, -0.5), scale=0.98))
+        self.add_component(tile, components.Model(type.get_model(), offset=(0, 0, -0.5), scale=0.98))
 
+        spatial.path.set_h(randint(0, 3) * 90)
         spatial.path.set_color_scale(type.get_color())
 
         symbol = type.get_symbol()

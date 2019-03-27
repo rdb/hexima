@@ -28,6 +28,7 @@ class PlayerControl(esper.Processor, DirectObject):
         self.winning_move = False
         self.dragging_pos = None
         self.restore_interval = None
+        self.cracked_tile = None
 
     def lock(self):
         # Locks the controls
@@ -126,9 +127,18 @@ class PlayerControl(esper.Processor, DirectObject):
                 Func(self.stop_move)).start()
             return False
 
+        if self.cracked_tile:
+            # Break away the cracked tile
+            self.world.add_component(self.cracked_tile, components.Falling(drag=5.0))
+            self.cracked_tile = None
+
         if type == TileType.exit:
             self.winning_move = True
             self.lock()
+
+        if type == TileType.cracked:
+            self.cracked_tile = self.world.tiles[(x, y)]
+            self.world.level.remove_tile(x, y)
 
         if dir == 'N':
             die.die.rotate_north()

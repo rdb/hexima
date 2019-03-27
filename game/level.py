@@ -15,6 +15,7 @@ class TileType(Enum):
     blank = '.'
     blank2 = ','
     void = None
+    cracked = 'x'
 
     def is_passable(self, dieval):
         if self.value is None:
@@ -35,6 +36,12 @@ class TileType(Enum):
             return (0.5, 1, 0.5, 1.0)
         else:
             return (1, 1, 1, 1)
+
+    def get_model(self):
+        if self.value == 'x':
+            return "gfx/tile-cracked.bam"
+        else:
+            return "gfx/tile.bam"
 
 
 class Level:
@@ -78,6 +85,9 @@ class Level:
         if tile.isspace():
             return TileType.void
         return TileType(tile)
+
+    def remove_tile(self, x, y):
+        self.rows[y] = self.rows[y][:x] + ' ' + self.rows[y][x + 1:]
 
     def check_obstacle(self, x, y, dieval=None):
         if x < 0 or y < 0:
