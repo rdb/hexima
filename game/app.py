@@ -6,6 +6,7 @@ from panda3d import core
 import pman.shim
 
 from .world import World
+from .packs import level_packs
 from . import ui
 
 
