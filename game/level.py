@@ -68,7 +68,7 @@ class Level:
 
     def get_tile(self, x, y):
         if x < 0 or y < 0:
-            return True
+            return TileType.void
         try:
             v = self.rows[y][x]
         except IndexError:

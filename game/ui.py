@@ -76,11 +76,11 @@ class LevelButton:
 
 
 class Button:
-    def __init__(self, parent, text="", pos=(0, 0), size=(0.4, 0.2)):
+    def __init__(self, parent, text="", pos=(0, 0), size=(0.4, 0.2), command=None, extraArgs=[]):
         #frame = (-size[0] * 0.5, size[0] * 0.5, -size[1] * 0.5, size[1] * 0.5)
         frame = (-0.15, 0.15, -0.03, 0.08)
-        self.path = DirectButton(parent=parent.path, text_fg=UI_COLOR, relief=None, frameSize=frame, text=text, text_scale=0.09, pos=(pos[0], 0, pos[1]))
-        generate_border(self.path, frame)
+        self.path = DirectButton(parent=parent.path, text_fg=UI_COLOR, relief=None, frameSize=frame, text=text, text_scale=0.09, pos=(pos[0], 0, pos[1]), command=command, extraArgs=extraArgs)
+        #generate_border(self.path, frame)
 
         self.path.set_shader_off(1)
         self.path.set_color_scale_off(1)
@@ -90,15 +90,18 @@ class Screen:
     def __init__(self, title=""):
         self.path = OnscreenText(text=title, scale=0.2, pos=(0, 0.5), fg=UI_COLOR, font=base.title_font)
 
-        cm = core.CardMaker("card")
-        cm.set_frame_fullscreen_quad()
-        card = render2d.attach_new_node(cm.generate())
-        card.set_shader(base.blur_shader)
-        card.set_shader_input("image", base.blurred_tex)
-        card.set_shader_input("direction", (4, 0))
-        card.set_shader_input("scale", base.blur_scale)
-        card.set_transparency(1)
-        self.blur_card = card
+        if base.blurred_tex:
+            cm = core.CardMaker("card")
+            cm.set_frame_fullscreen_quad()
+            card = render2d.attach_new_node(cm.generate())
+            card.set_shader(base.blur_shader)
+            card.set_shader_input("image", base.blurred_tex)
+            card.set_shader_input("direction", (4, 0))
+            card.set_shader_input("scale", base.blur_scale)
+            card.set_transparency(1)
+            self.blur_card = card
+        else:
+            self.blur_card = core.NodePath("")
 
         cm = core.CardMaker("card")
         cm.set_frame_fullscreen_quad()

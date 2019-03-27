@@ -39,13 +39,32 @@ class GameApp(ShowBase):
         self.title_font = loader.load_font("font/Quicksand-Light.otf")
         self.title_font.set_pixels_per_unit(64)
 
-        self.world = World()
-        self.world.root.reparent_to(self.render)
-
         self.blur_shader = core.Shader.load(core.Shader.SL_GLSL, "shader/blur.vert", "shader/blur.frag")
         self.blur_scale = core.PTA_float([1.0])
 
-        self.setup_filters()
+        self.blurred_tex = None
+
+        screen = ui.Screen("select quality")
+        ui.Button(screen, 'sublime', pos=(0.0, 0.3), command=self.start_game, extraArgs=[3])
+        ui.Button(screen, 'mediocre', pos=(0.0, 0.1), command=self.start_game, extraArgs=[2])
+        ui.Button(screen, 'terrible', pos=(0.0, -0.1), command=self.start_game, extraArgs=[1])
+        self.quality_screen = screen
+
+    def start_game(self, quality):
+        self.quality_screen.hide()
+
+        if quality >= 3:
+            #get_multisample_fbprops.__func__ = get_multisample_fbprops
+            #get_multisample_fbprops.__self__ = None
+            #core.FrameBufferProperties.DtoolClassDict['getDefault'] = get_multisample_fbprops
+            #core.FrameBufferProperties.set_default(fbprops)
+            self.render.set_antialias(core.AntialiasAttrib.M_multisample)
+
+        if quality >= 2:
+            self.setup_filters()
+
+        self.world = World()
+        self.world.root.reparent_to(self.render)
 
         num_packs = len(level_packs)
         x = (num_packs - 1) * -0.2
@@ -70,13 +89,14 @@ class GameApp(ShowBase):
 
         self.task_mgr.add(self.process_world)
 
-        self.accept('f3', self.world.win_level)
-
     def setup_filters(self):
         self.filters = FilterManager(base.win, base.cam)
         self.scene_tex = core.Texture()
         self.quad = self.filters.render_scene_into(colortex=self.scene_tex)
         self.quad.clear_color()
+
+        if not self.quad:
+            return
 
         prev_tex = self.scene_tex
 

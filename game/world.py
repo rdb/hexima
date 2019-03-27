@@ -40,12 +40,14 @@ class World(esper.World):
 
         # Add light source
         sun = self.create_entity()
-        self.add_component(sun, components.Sun((0.7, 0.7, -1), color_temperature=6000, intensity=9))
+        self.add_component(sun, components.Sun((0.7, 0.4, -0.7), color_temperature=6000, intensity=9))
 
         self.level_root = self.root.attach_new_node("level")
         self.old_level_root = self.root.attach_new_node("old_levels")
 
         self.exit_tile = self.place_tile(0, 0, TileType.exit)
+
+        self.add_processor(processors.Gravity(1.0))
 
         self.setup()
 
@@ -90,6 +92,12 @@ class World(esper.World):
         level_root = self.root.attach_new_node("level")
         self.level_root = level_root
 
+        # Make previous tiles fall away
+        #for tile in self.tiles:
+        #    self.add_component(tile, components.Falling(drag=random() + 0.5))
+
+        self.tiles.clear()
+
         i = 0
         entrance = None
         exit_tile = None
@@ -102,6 +110,8 @@ class World(esper.World):
             tile = self.place_tile(x, y, type)
             if type == TileType.exit:
                 exit_tile = tile
+
+            self.tiles.append(tile)
 
         # Reposition player and the exit tile they rode in on
         spatial = self.component_for_entity(self.player, components.Spatial)
@@ -116,16 +126,18 @@ class World(esper.World):
 
         self.exit_tile = exit_tile
 
+        level_root.set_z(0)
+        self.setup()
+        level_root.set_z(7)
+
         Sequence(
             Parallel(
-               self.old_level_root.posInterval(2.0, (self.old_level_root.get_x(), self.old_level_root.get_y(), self.old_level_root.get_z() - 7), blendType='easeOut'),
+               self.old_level_root.posInterval(2.0, (self.old_level_root.get_x(), self.old_level_root.get_y(), self.old_level_root.get_z() - 10), blendType='easeOut'),
                exit_tile_path.posInterval(2.0, (exit_tile_path.get_x(), exit_tile_path.get_y(), exit_tile_path.get_z() + 7), blendType='easeOut'),
                level_root.posInterval(2.0, (level_root.get_x(), level_root.get_y(), 0), blendType='easeOut'),
             ),
             Func(self.player_control.unlock),
         ).start()
-
-        self.setup()
 
     def place_tile(self, x, y, type):
         tile = self.create_entity()

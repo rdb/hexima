@@ -128,7 +128,7 @@ class Sun:
         if intensity is not None:
             self.light.set_color(self.light.get_color() * intensity)
 
-        self.light.set_shadow_caster(True, 1024, 1024)
+        self.light.set_shadow_caster(True, 1024, 1024, -1500)
 
     def setup(self, world, ent):
         path = world.root.attach_new_node(self.light)
@@ -137,7 +137,7 @@ class Sun:
         world.root.set_shader(shader)
         world.root.set_depth_offset(-2)
 
-        bmin, bmax = world.root.get_tight_bounds(path)
+        bmin, bmax = world.level_root.get_tight_bounds(path)
         lens = self.light.get_lens()
         lens.set_film_offset((bmin.xz + bmax.xz) * 0.5)
         lens.set_film_size(bmax.xz - bmin.xz)
@@ -163,3 +163,10 @@ class Symbol:
         path.set_light_off(1)
         path.set_hpr(0, -90, 0)
         path.set_pos(0, -0.3, -0.499)
+
+
+class Falling:
+    def __init__(self, drag=1.0, orientation=0.0):
+        self.velocity = 0.0
+        self.drag = drag
+        self.orientation = orientation

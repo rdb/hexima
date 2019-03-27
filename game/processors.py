@@ -79,7 +79,7 @@ class PlayerControl(esper.Processor, DirectObject):
 
         x, y = int(target_pos[0]), int(target_pos[1])
         type = self.world.level.get_tile(x, y)
-        if not type.is_passable(next_number):
+        if not type.is_passable(next_number) and not base.mouseWatcherNode.is_button_down('pause'):
             self.moving = True
             Sequence(
                 Parallel(
@@ -138,3 +138,16 @@ class PlayerControl(esper.Processor, DirectObject):
         if die.moves:
             if not self.start_move(die.moves.pop(0)):
                 die.moves.clear()
+
+
+class Gravity(esper.Processor):
+    def __init__(self, acceleration=1.0):
+        self.acceleration = 1.0
+
+    def process(self, dt):
+        for ent, (spatial, fall) in self.world.get_components(components.Spatial, components.Falling):
+            fall.velocity += self.acceleration * dt * fall.drag
+
+            spatial.path.set_z(spatial.path.get_z() - fall.velocity * dt)
+
+            spatial.path.set_p(spatial.path.get_p() + dt)
