@@ -21,8 +21,10 @@ in vec3 vpos;
 in vec3 norm;
 in vec4 shad[1];
 in vec3 col;
+in vec2 uv;
 
 uniform vec4 p3d_ColorScale;
+uniform vec4 p3d_TexAlphaOnly;
 
 out vec4 p3d_FragColor;
 
@@ -65,15 +67,18 @@ void main() {
     vec3 specContrib = F * G * D / (4.0 * NdotL * NdotV);
 
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
-    vec3 color = NdotL * p3d_LightSource[i].color * (diffuseContrib + specContrib) * col;
-    color *= textureProj(p3d_LightSource[i].shadowMap, shad[i]);
+    vec3 color = p3d_LightSource[i].color * (diffuseContrib + specContrib) * col;
+    color *= (textureProj(p3d_LightSource[i].shadowMap, shad[i]) * NdotL) * 0.9 + 0.1;
 
     p3d_FragColor.rgb += color;
   }
+
+  vec4 texcol = texture(p3d_Texture0, uv) + p3d_TexAlphaOnly;
+  p3d_FragColor.rgb *= texcol.rgb;
 
   p3d_FragColor.rgb *= p3d_ColorScale.rgb;
 
   p3d_FragColor.rgb = mix(fog_color, p3d_FragColor.rgb, clamp(exp2(0.2 * (-vpos.z - 10) * -1.442695f), 0, 1));
 
-  p3d_FragColor.a = 1;
+  p3d_FragColor.a = texcol.a;
 }

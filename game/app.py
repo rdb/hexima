@@ -10,14 +10,34 @@ from .packs import level_packs
 from . import ui
 
 
-level_packs = [
-    ("one", ["level0", "level1", "level2", "level3", "level4", "level5"]),
-    ("two", ["level6", "level7", "level8"]),
-    ("three", []),
-    ("four", []),
-    ("five", []),
-    ("six", []),
-]
+class MyFilterManager(FilterManager):
+    multisamples = None
+
+    def createBuffer(self, name, xsize, ysize, texgroup, depthbits=1):
+        winprops = core.WindowProperties(size=(xsize, ysize))
+        props = core.FrameBufferProperties(core.FrameBufferProperties.get_default())
+        props.back_buffers = 0
+        props.rgb_color = 1
+        props.depth_bits = depthbits
+
+        if self.multisamples:
+            props.multisamples = self.multisamples
+
+        depthtex, colortex, auxtex0, auxtex1 = texgroup
+        buffer = base.graphics_engine.make_output(
+            self.win.getPipe(), name, -1,
+            props, winprops, core.GraphicsPipe.BF_refuse_window | core.GraphicsPipe.BF_resizeable,
+            self.win.getGsg(), self.win)
+        if buffer is None:
+            return buffer
+        if depthtex:
+            buffer.add_render_texture(depthtex, core.GraphicsOutput.RTM_bind_or_copy, core.GraphicsOutput.RTP_depth)
+        if colortex:
+            buffer.add_render_texture(colortex, core.GraphicsOutput.RTM_bind_or_copy, core.GraphicsOutput.RTP_color)
+        buffer.set_sort(self.nextsort)
+        buffer.disable_clears()
+        self.nextsort += 1
+        return buffer
 
 
 class GameApp(ShowBase):
@@ -53,12 +73,10 @@ class GameApp(ShowBase):
 
     def start_game(self, quality):
         self.quality_screen.hide()
+        self.quality = quality
 
         if quality >= 3:
-            #get_multisample_fbprops.__func__ = get_multisample_fbprops
-            #get_multisample_fbprops.__self__ = None
-            #core.FrameBufferProperties.DtoolClassDict['getDefault'] = get_multisample_fbprops
-            #core.FrameBufferProperties.set_default(fbprops)
+            MyFilterManager.multisamples = 16
             self.render.set_antialias(core.AntialiasAttrib.M_multisample)
 
         if quality >= 2:
@@ -91,7 +109,7 @@ class GameApp(ShowBase):
         self.task_mgr.add(self.process_world)
 
     def setup_filters(self):
-        self.filters = FilterManager(base.win, base.cam)
+        self.filters = MyFilterManager(base.win, base.cam)
         self.scene_tex = core.Texture()
         self.quad = self.filters.render_scene_into(colortex=self.scene_tex)
         self.quad.clear_color()

@@ -8,22 +8,53 @@ from .level import TileType
 from . import components
 
 
+MOUSE_SENSITIVITY = 0.3
+
+
 class PlayerControl(esper.Processor, DirectObject):
-    def __init__(self, player):
+    def __init__(self, player, camera):
         self.player = player
+        self.camera = camera
 
         self.accept('arrow_up', self.move_up)
         self.accept('arrow_down', self.move_down)
         self.accept('arrow_left', self.move_left)
         self.accept('arrow_right', self.move_right)
+        self.accept('mouse1', self.start_drag)
+        self.accept('mouse1-up', self.stop_drag)
 
         self.locked = True
         self.moving = False
         self.winning_move = False
+        self.dragging_pos = None
+        self.restore_interval = None
+
+    def lock(self):
+        # Locks the controls
+        self.locked = True
+        if self.dragging_pos:
+            self.stop_drag()
 
     def unlock(self):
         self.locked = False
         assert self.world.level
+
+    def start_drag(self):
+        if self.restore_interval:
+            self.restore_interval.pause()
+            self.restore_interval = None
+
+        ptr = base.win.get_pointer(0)
+        if ptr.in_window:
+            self.dragging_pos = ptr.x, ptr.y
+
+    def stop_drag(self):
+        if self.dragging_pos:
+            self.dragging_pos = None
+
+            spatial = self.world.component_for_entity(self.camera, components.Spatial)
+            self.restore_interval = spatial.path.hprInterval(0.3, spatial.default_hpr, blendType='easeOut')
+            self.restore_interval.start()
 
     def move_up(self):
         if self.locked:
@@ -96,8 +127,8 @@ class PlayerControl(esper.Processor, DirectObject):
             return False
 
         if type == TileType.exit:
-            self.locked = True
             self.winning_move = True
+            self.lock()
 
         if dir == 'N':
             die.die.rotate_north()
@@ -122,7 +153,7 @@ class PlayerControl(esper.Processor, DirectObject):
 
     def stop_move(self):
         if self.winning_move:
-            self.locked = True
+            self.lock()
             self.world.win_level()
             self.winning_move = False
 
@@ -131,6 +162,14 @@ class PlayerControl(esper.Processor, DirectObject):
     def process(self, dt):
         if self.locked or self.moving:
             return
+
+        if self.dragging_pos:
+            ptr = base.win.get_pointer(0)
+            if ptr.in_window:
+                x = (self.dragging_pos[0] - ptr.x) * MOUSE_SENSITIVITY
+                y = (self.dragging_pos[1] - ptr.y) * MOUSE_SENSITIVITY
+                spatial = self.world.component_for_entity(self.camera, components.Spatial)
+                spatial.path.set_hpr(spatial.default_hpr[0] + x, max(min(spatial.default_hpr[1] + y, 0), -90), 0)
 
         die = self.world.component_for_entity(self.player, components.Die)
         spatial = self.world.component_for_entity(self.player, components.Spatial)

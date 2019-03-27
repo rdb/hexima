@@ -29,14 +29,14 @@ class World(esper.World):
         self.add_component(player, components.Model("gfx/d6/d6.bam", offset=(0, 0, -0.5), scale=0.96/7.0))
         self.player = player
 
-        self.player_control = processors.PlayerControl(player)
-        self.add_processor(self.player_control)
-
         # Create camera entity
         camera = self.create_entity()
-        self.add_component(camera, components.Camera(base.camera, fov=90, pos=(-2, -4, 5), look_at=(0, 0, 0)))
-        self.add_component(camera, components.Spatial(parent=self.root))
+        self.add_component(camera, components.Camera(base.camera, fov=90, pos=(0, -6.7, 0), look_at=(0, 0, 0)))
+        self.add_component(camera, components.Spatial(parent=self.root, hpr=(-26.5651, -48.1897, 0)))#153.435, 48.1897, 0))) #
         self.add_component(camera, components.Compass(player, 'xy'))
+
+        self.player_control = processors.PlayerControl(player, camera)
+        self.add_processor(self.player_control)
 
         # Add light source
         sun = self.create_entity()
