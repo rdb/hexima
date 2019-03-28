@@ -17,6 +17,12 @@ class World(esper.World):
 
         self.root = core.NodePath("world")
 
+        # Add fog here for now
+        fog = core.Fog("fog")
+        fog.color = (0.31, 0.42, 0.53, 1.0)
+        fog.set_linear_range(10, 30)
+        self.root.set_fog(fog)
+
         self.level = None
 
         self.tiles = {}
@@ -41,7 +47,7 @@ class World(esper.World):
 
         # Add light source
         sun = self.create_entity()
-        self.add_component(sun, components.Sun((0.7, 0.4, -0.7), color_temperature=6000, intensity=9))
+        self.add_component(sun, components.Sun((0.7, 0.4, -0.7), color_temperature=6000, intensity=2.05))
 
         self.level_root = self.root.attach_new_node("level")
         self.old_level_root = self.root.attach_new_node("old_levels")

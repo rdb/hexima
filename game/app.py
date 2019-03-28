@@ -44,8 +44,28 @@ class GameApp(ShowBase):
     def __init__(self):
         self.settings = core.load_prc_file(core.Filename.expand_from("$MAIN_DIR/settings.prc"))
 
-        ShowBase.__init__(self)
+        ShowBase.__init__(self, windowType='none')
+
+        # Try opening "gl-version 3 2" window
+        props = core.WindowProperties.get_default()
+        have_window = False
+        try:
+            self.open_default_window(props=props)
+            have_window = True
+        except Exception:
+            pass
+
+        print("Failed to open window with OpenGL 3.2; falling back to older OpenGL.")
+        if not have_window:
+            core.load_prc_file_data("", "gl-version")
+            self.open_default_window(props=props)
+            print("The window seemed to have opened this time around.")
+
+        self.has_fixed_function = base.win.gsg.has_extension("GL_ARB_compatibility")
+
+        # Initialize panda3d-pman
         pman.shim.init(self)
+
         self.accept('escape', self.on_escape)
         self.disable_mouse()
 

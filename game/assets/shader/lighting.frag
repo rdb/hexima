@@ -67,7 +67,7 @@ void main() {
     vec3 specContrib = F * G * D / (4.0 * NdotL * NdotV);
 
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
-    vec3 color = p3d_LightSource[i].color * (diffuseContrib + specContrib) * col;
+    vec3 color = p3d_LightSource[i].color * 4.5 * (diffuseContrib + specContrib) * col;
     color *= (textureProj(p3d_LightSource[i].shadowMap, shad[i]) * NdotL) * 0.9 + 0.1;
 
     p3d_FragColor.rgb += color;
