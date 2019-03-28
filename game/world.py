@@ -20,6 +20,7 @@ class World(esper.World):
         self.level = None
 
         self.tiles = {}
+        self.old_tiles = []
         self.next_levels = []
 
         # Add player
@@ -74,19 +75,54 @@ class World(esper.World):
         for ent, symbol in self.get_component(components.Symbol):
             symbol.setup(self, ent)
 
+    def on_level_start(self):
+        self.player_control.unlock()
+        base.accept('r', self.reload_level)
+
+        spatial = self.component_for_entity(self.player, components.Spatial)
+        die = self.component_for_entity(self.player, components.Die)
+        spatial.path.set_hpr(0, 0, 0)
+        die.die.reset()
+
+        # Delete old tiles
+        while len(self.old_tiles) > 3:
+            oldest_tiles = self.old_tiles.pop(0)
+            for tile in oldest_tiles:
+                self.delete_entity(tile)
+
     def win_level(self):
         if not self.next_levels:
             messenger.send('escape')
             return
 
         level = self.next_levels.pop(0)
+        if not level:
+            messenger.send('escape')
+            return
+
         self.load_level(level)
+
+    def reload_level(self):
+        if self.player_control.locked:
+            pass
+
+        # Remove current tile, place a fake exit tile here
+        spatial = self.component_for_entity(self.player, components.Spatial)
+        x, y = int(spatial.x), int(spatial.y)
+        tile = self.tiles.get((x, y))
+
+        if tile:
+            self.delete_entity(tile)
+            self.exit_tile = self.place_tile(x, y, TileType.blank)
+
+        self.load_level(self.level_name)
 
     def load_level(self, name):
         level_dir = os.path.join(os.path.dirname(__file__), '..', 'levels')
         level = Level()
         level.read(os.path.join(level_dir, name + '.lvl'))
         self.level = level
+        self.level_name = name
 
         self.level_root.wrt_reparent_to(self.old_level_root)
         level_root = self.root.attach_new_node("level")
@@ -96,6 +132,7 @@ class World(esper.World):
         #for tile in self.tiles.values():
         #    self.add_component(tile, components.Falling(drag=random() + 0.5))
 
+        self.old_tiles.append(list(self.tiles.values()))
         self.tiles.clear()
 
         i = 0
@@ -121,10 +158,22 @@ class World(esper.World):
         spatial.y = entrance[1]
         level_root.set_z(7)
 
+        die = self.component_for_entity(self.player, components.Die)
+        if die.die.top_number != 1:
+            # Delay exit tile a little since the cube needs to rotate oddly
+            exit_tile_duration = 2.2
+        else:
+            exit_tile_duration = 2.0
+
+        die_heading = (spatial.path.get_h() + 180) % 360 - 180
+        spatial.path.set_h(die_heading)
+
         exit_tile_path = self.component_for_entity(self.exit_tile, components.Spatial).path
         exit_tile_path.wrt_reparent_to(level_root)
+        exit_tile_path.set_h(die_heading)
 
         self.exit_tile = exit_tile
+        self.tiles[entrance] = exit_tile
 
         level_root.set_z(0)
         self.setup()
@@ -133,10 +182,13 @@ class World(esper.World):
         Sequence(
             Parallel(
                self.old_level_root.posInterval(2.0, (self.old_level_root.get_x(), self.old_level_root.get_y(), self.old_level_root.get_z() - 10), blendType='easeOut'),
-               exit_tile_path.posInterval(2.0, (exit_tile_path.get_x(), exit_tile_path.get_y(), exit_tile_path.get_z() + 7), blendType='easeOut'),
+               exit_tile_path.posInterval(exit_tile_duration, (exit_tile_path.get_x(), exit_tile_path.get_y(), exit_tile_path.get_z() + 7), blendType='easeOut'),
                level_root.posInterval(2.0, (level_root.get_x(), level_root.get_y(), 0), blendType='easeOut'),
+               spatial.path.hprInterval(2.0, (0, 0, 0), blendType='easeInOut'),
+               exit_tile_path.hprInterval(2.0, (0, 0, 0), blendType='easeInOut'),
+               exit_tile_path.colorScaleInterval(2.0, (1, 1, 1, 1), blendType='easeInOut'),
             ),
-            Func(self.player_control.unlock),
+            Func(self.on_level_start),
         ).start()
 
     def place_tile(self, x, y, type):

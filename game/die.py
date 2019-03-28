@@ -15,6 +15,9 @@ sequences = [
 
 class Die(object):
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.top_number = 1
         self.east_number = 4
         self.north_number = 5
