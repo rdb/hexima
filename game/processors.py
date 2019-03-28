@@ -123,14 +123,14 @@ class PlayerControl(esper.Processor, DirectObject):
             self.moving = True
             Sequence(
                 Parallel(
-                    spatial.path.posInterval(0.125, (orig_pos + target_pos) * 0.5, blendType='easeInOut'),
-                    LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.125, toData=math.pi * 0.5, blendType='easeInOut'),
-                    spatial.path.quatInterval(0.125, (orig_quat + target_quat) * 0.5, blendType='easeInOut'),
+                    spatial.path.posInterval(0.05, orig_pos * 0.9 + target_pos * 0.1, blendType='easeInOut'),
+                    LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.05, toData=math.pi * 0.1, blendType='easeInOut'),
+                    spatial.path.quatInterval(0.05, orig_quat * 0.9 + target_quat * 0.1, blendType='easeInOut'),
                 ),
                 Parallel(
-                    spatial.path.posInterval(0.125, orig_pos, blendType='easeIn'),
-                    LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.125, fromData=math.pi * 0.5, toData=0, blendType='easeIn'),
-                    spatial.path.quatInterval(0.125, orig_quat, blendType='easeIn'),
+                    spatial.path.posInterval(0.05, orig_pos, blendType='easeIn'),
+                    LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.05, fromData=math.pi * 0.1, toData=0, blendType='easeIn'),
+                    spatial.path.quatInterval(0.05, orig_quat, blendType='easeIn'),
                 ),
                 Func(self.stop_move)).start()
             return False
