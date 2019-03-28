@@ -46,11 +46,16 @@ class World(esper.World):
         self.level_root = self.root.attach_new_node("level")
         self.old_level_root = self.root.attach_new_node("old_levels")
 
-        self.exit_tile = self.place_tile(0, 0, TileType.exit)
+        self.tiles[(0, 0)] = self.place_tile(0, 0, TileType.exit)
 
         self.add_processor(processors.Gravity(1.0))
 
         self.setup()
+
+    def delete_entity(self, ent):
+        assert ent not in self.tiles.values()
+        esper.World.delete_entity(self, ent)
+        self._clear_dead_entities()
 
     def setup(self):
         "One-time scene graph set-up after components are added/removed."
@@ -77,7 +82,6 @@ class World(esper.World):
 
     def on_level_start(self):
         self.player_control.unlock()
-        base.accept('r', self.reload_level)
 
         spatial = self.component_for_entity(self.player, components.Spatial)
         die = self.component_for_entity(self.player, components.Die)
@@ -106,23 +110,23 @@ class World(esper.World):
         if self.player_control.locked:
             pass
 
-        # Remove current tile, place a fake exit tile here
-        spatial = self.component_for_entity(self.player, components.Spatial)
-        x, y = int(spatial.x), int(spatial.y)
-        tile = self.tiles.get((x, y))
-
-        if tile:
-            self.delete_entity(tile)
-            self.exit_tile = self.place_tile(x, y, TileType.blank)
-
         self.load_level(self.level_name)
 
     def load_level(self, name):
+        self.player_control.lock()
+
         level_dir = os.path.join(os.path.dirname(__file__), '..', 'levels')
         level = Level()
         level.read(os.path.join(level_dir, name + '.lvl'))
         self.level = level
         self.level_name = name
+
+        # Get the current tile that the player is on.
+        spatial = self.component_for_entity(self.player, components.Spatial)
+        x, y = int(spatial.x), int(spatial.y)
+        cur_tile = self.tiles.get((x, y), None)
+        if cur_tile is not None:
+            del self.tiles[(x, y)]
 
         self.level_root.wrt_reparent_to(self.old_level_root)
         level_root = self.root.attach_new_node("level")
@@ -138,20 +142,28 @@ class World(esper.World):
         i = 0
         entrance = None
         exit_tile = None
+        entrance_tile = None
 
         for x, y, type in level.get_tiles():
-            if type == TileType.entrance:
-                entrance = (x, y)
-                continue
-
             tile = self.place_tile(x, y, type)
             if type == TileType.exit:
                 exit_tile = tile
 
+            if type == TileType.entrance:
+                entrance = (x, y)
+                entrance_tile = tile
+
             self.tiles[(x, y)] = tile
 
+        # Remove current tile that the player is on; colour the entrance tile
+        # the same way
+        entrance_tile_path = self.component_for_entity(entrance_tile, components.Spatial).path
+        if cur_tile is not None:
+            cur_tile_path = self.component_for_entity(cur_tile, components.Spatial).path
+            entrance_tile_path.set_color_scale(cur_tile_path.get_color_scale())
+            self.delete_entity(cur_tile)
+
         # Reposition player and the exit tile they rode in on
-        spatial = self.component_for_entity(self.player, components.Spatial)
         self.old_level_root.set_x(self.old_level_root.get_x() + entrance[0] - spatial.x)
         self.old_level_root.set_y(self.old_level_root.get_y() + entrance[1] - spatial.y)
         spatial.x = entrance[0]
@@ -168,12 +180,10 @@ class World(esper.World):
         die_heading = (spatial.path.get_h() + 180) % 360 - 180
         spatial.path.set_h(die_heading)
 
-        exit_tile_path = self.component_for_entity(self.exit_tile, components.Spatial).path
-        exit_tile_path.wrt_reparent_to(level_root)
-        exit_tile_path.set_h(die_heading)
-
-        self.exit_tile = exit_tile
-        self.tiles[entrance] = exit_tile
+        #exit_tile_path = self.component_for_entity(self.exit_tile, components.Spatial).path
+        #exit_tile_path.wrt_reparent_to(level_root)
+        entrance_tile_path.set_h(die_heading)
+        entrance_tile_path.set_z(-7)
 
         level_root.set_z(0)
         self.setup()
@@ -182,11 +192,11 @@ class World(esper.World):
         Sequence(
             Parallel(
                self.old_level_root.posInterval(2.0, (self.old_level_root.get_x(), self.old_level_root.get_y(), self.old_level_root.get_z() - 10), blendType='easeOut'),
-               exit_tile_path.posInterval(exit_tile_duration, (exit_tile_path.get_x(), exit_tile_path.get_y(), exit_tile_path.get_z() + 7), blendType='easeOut'),
+               entrance_tile_path.posInterval(exit_tile_duration, (entrance_tile_path.get_x(), entrance_tile_path.get_y(), entrance_tile_path.get_z() + 7), blendType='easeOut'),
                level_root.posInterval(2.0, (level_root.get_x(), level_root.get_y(), 0), blendType='easeOut'),
                spatial.path.hprInterval(2.0, (0, 0, 0), blendType='easeInOut'),
-               exit_tile_path.hprInterval(2.0, (0, 0, 0), blendType='easeInOut'),
-               exit_tile_path.colorScaleInterval(2.0, (1, 1, 1, 1), blendType='easeInOut'),
+               entrance_tile_path.hprInterval(2.0, (0, 0, 0), blendType='easeInOut'),
+               entrance_tile_path.colorScaleInterval(2.0, (1, 1, 1, 1), blendType='easeInOut'),
             ),
             Func(self.on_level_start),
         ).start()

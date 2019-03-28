@@ -22,6 +22,7 @@ class PlayerControl(esper.Processor, DirectObject):
         self.accept('arrow_right', self.move_right)
         self.accept('mouse1', self.start_drag)
         self.accept('mouse1-up', self.stop_drag)
+        self.accept('r', self.reload)
 
         self.locked = True
         self.moving = False
@@ -29,6 +30,7 @@ class PlayerControl(esper.Processor, DirectObject):
         self.dragging_pos = None
         self.restore_interval = None
         self.cracked_tile = None
+        self.reload = False
 
     def lock(self):
         # Locks the controls
@@ -39,6 +41,12 @@ class PlayerControl(esper.Processor, DirectObject):
     def unlock(self):
         self.locked = False
         assert self.world.level
+
+    def reload(self):
+        if self.locked:
+            return
+
+        self.reload = True
 
     def start_drag(self):
         if self.restore_interval:
@@ -139,6 +147,7 @@ class PlayerControl(esper.Processor, DirectObject):
         if type == TileType.cracked:
             self.cracked_tile = self.world.tiles[(x, y)]
             self.world.level.remove_tile(x, y)
+            del self.world.tiles[(x, y)]
 
         if dir == 'N':
             die.die.rotate_north()
@@ -173,6 +182,15 @@ class PlayerControl(esper.Processor, DirectObject):
         if self.locked or self.moving:
             return
 
+        die = self.world.component_for_entity(self.player, components.Die)
+        spatial = self.world.component_for_entity(self.player, components.Spatial)
+
+        if self.reload:
+            self.reload = False
+            die.moves.clear()
+            self.world.reload_level()
+            return
+
         if self.dragging_pos:
             ptr = base.win.get_pointer(0)
             if ptr.in_window:
@@ -180,9 +198,6 @@ class PlayerControl(esper.Processor, DirectObject):
                 y = (self.dragging_pos[1] - ptr.y) * MOUSE_SENSITIVITY
                 spatial = self.world.component_for_entity(self.camera, components.Spatial)
                 spatial.path.set_hpr(spatial.default_hpr[0] + x, max(min(spatial.default_hpr[1] + y, 0), -90), 0)
-
-        die = self.world.component_for_entity(self.player, components.Die)
-        spatial = self.world.component_for_entity(self.player, components.Spatial)
 
         if die.moves:
             if not self.start_move(die.moves.pop(0)):
