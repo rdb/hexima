@@ -83,7 +83,7 @@ class GameApp(ShowBase):
         self.regular_font.set_pixels_per_unit(64)
 
         self.title_font = loader.load_font("font/Quicksand-Light.otf")
-        self.title_font.set_pixels_per_unit(64)
+        self.title_font.set_pixels_per_unit(128)
 
         self.blur_shader = core.Shader.load(core.Shader.SL_GLSL, "shader/blur.vert", "shader/blur.frag")
         self.blur_scale = core.PTA_float([1.0])
