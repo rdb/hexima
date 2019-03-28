@@ -55,13 +55,18 @@ class GameApp(ShowBase):
         except Exception:
             pass
 
-        print("Failed to open window with OpenGL 3.2; falling back to older OpenGL.")
         if not have_window:
+            print("Failed to open window with OpenGL 3.2; falling back to older OpenGL.")
             core.load_prc_file_data("", "gl-version")
             self.open_default_window(props=props)
             print("The window seemed to have opened this time around.")
 
-        self.has_fixed_function = base.win.gsg.has_extension("GL_ARB_compatibility")
+        gsg = base.win.gsg
+        gl_version = (gsg.driver_version_major, gsg.driver_version_minor)
+        self.has_fixed_function = gl_version < (3, 2) or \
+            gsg.has_extension("GL_ARB_compatibility")
+
+        print("OpenGL version: {0}.{1} ({2})".format(*gl_version, 'compat' if self.has_fixed_function else 'core'))
 
         # Initialize panda3d-pman
         pman.shim.init(self)
