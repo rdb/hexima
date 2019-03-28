@@ -155,6 +155,14 @@ class PlayerControl(esper.Processor, DirectObject):
             else:
                 sequence.append(spatial.path.posInterval(0.5, target_pos, blendType='easeOut'))
 
+        if type == TileType.teleporter:
+            # Find other teleporter.
+            others = set(self.world.teleporters)
+            others.discard(tuple(target_pos.xy))
+            if others:
+                target_pos.xy = others.pop()
+                sequence.append(spatial.path.posInterval(0.0, target_pos))
+
         if self.cracked_tile:
             # Break away the cracked tile
             self.world.add_component(self.cracked_tile, components.Falling(drag=5.0))

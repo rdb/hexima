@@ -49,6 +49,8 @@ class World(esper.World):
         sun = self.create_entity()
         self.add_component(sun, components.Sun((0.7, 0.4, -0.7), color_temperature=6000, intensity=2.05))
 
+        self.teleporters = set()
+
         self.level_root = self.root.attach_new_node("level")
         self.old_level_root = self.root.attach_new_node("old_levels")
 
@@ -151,6 +153,8 @@ class World(esper.World):
         self.old_tiles.append(list(self.tiles.values()))
         self.tiles.clear()
 
+        self.teleporters.clear()
+
         i = 0
         entrance = None
         exit_tile = None
@@ -164,6 +168,9 @@ class World(esper.World):
             if type == TileType.entrance:
                 entrance = (x, y)
                 entrance_tile = tile
+
+            if type == TileType.teleporter:
+                self.teleporters.add((x, y))
 
             self.tiles[(x, y)] = tile
 

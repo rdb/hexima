@@ -17,6 +17,7 @@ class TileType(Enum):
     void = None
     cracked = 'x'
     ice = 's'
+    teleporter = 't'
 
     def is_passable(self, dieval):
         if self.value is None:
@@ -35,6 +36,8 @@ class TileType(Enum):
     def get_color(self):
         if self.value == 'e':
             return (0.5, 1, 0.5, 1.0)
+        elif self.value == 't':
+            return (0.9, 0.3, 0.6, 1)
         elif self.value == 's':
             return (0.6, 0.7, 1.0, 0.5)
         else:
