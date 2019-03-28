@@ -123,7 +123,13 @@ class World(esper.World):
 
         level_dir = os.path.join(os.path.dirname(__file__), '..', 'levels')
         level = Level()
-        level.read(os.path.join(level_dir, name + '.lvl'))
+
+        try:
+            level.read(os.path.join(level_dir, name + '.lvl'))
+        except IOError as ex:
+            print("Failed to load level: {0}".format(ex))
+            return
+
         self.level = level
         self.level_name = name
 
