@@ -39,7 +39,7 @@ class TileType(Enum):
         elif self.value == 't':
             return (0.9, 0.3, 0.6, 1)
         elif self.value == 's':
-            return (0.6, 0.7, 1.0, 0.5)
+            return (0.7, 0.95, 1.3, 0.7)
         else:
             return (1, 1, 1, 1)
 
