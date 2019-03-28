@@ -71,7 +71,7 @@ class GameApp(ShowBase):
         # Initialize panda3d-pman
         pman.shim.init(self)
 
-        self.accept('escape', self.on_escape)
+        self.accept('escape', sys.exit)
         self.disable_mouse()
 
         self.set_background_color((0.31, 0.42, 0.53))
@@ -130,6 +130,8 @@ class GameApp(ShowBase):
 
         ui.Button(screen, 'back', pos=(-0.2, -0.5))
         self.level_select = screen
+
+        self.accept('escape', self.on_escape)
 
         self.task_mgr.add(self.process_world)
 
