@@ -222,6 +222,8 @@ class World(esper.World):
 
         spatial.path.set_h(randint(0, 3) * 90)
         spatial.path.set_color_scale(type.get_color())
+        if type.get_color()[3] < 1.0:
+            spatial.path.set_transparency(1)
 
         symbol = type.get_symbol()
         if symbol:

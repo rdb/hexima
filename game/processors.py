@@ -98,25 +98,27 @@ class PlayerControl(esper.Processor, DirectObject):
         target_pos = spatial.path.get_pos()
         target_quat = spatial.path.get_quat()
         next_number = None
+        vector = core.Vec2(0, 0)
         if dir == 'N':
-            target_pos.y += 1
+            vector.y += 1
             target_quat *= core.LRotation((1, 0, 0), -90)
             next_number = die.die.north_number
         elif dir == 'E':
-            target_pos.x += 1
+            vector.x += 1
             target_quat *= core.LRotation((0, 1, 0), 90)
             next_number = die.die.east_number
         elif dir == 'S':
-            target_pos.y -= 1
+            vector.y -= 1
             target_quat *= core.LRotation((1, 0, 0), 90)
             next_number = die.die.south_number
         elif dir == 'W':
-            target_pos.x -= 1
+            vector.x -= 1
             target_quat *= core.LRotation((0, 1, 0), -90)
             next_number = die.die.west_number
 
         z_scale = math.sqrt(0.5) - 0.5
 
+        target_pos.xy += vector
         x, y = int(target_pos[0]), int(target_pos[1])
         type = self.world.level.get_tile(x, y)
         if not type.is_passable(next_number) and not base.mouseWatcherNode.is_button_down('pause'):
@@ -134,6 +136,24 @@ class PlayerControl(esper.Processor, DirectObject):
                 ),
                 Func(self.stop_move)).start()
             return False
+
+        sequence = [
+            Parallel(
+                spatial.path.posInterval(0.25, target_pos),
+                LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.25, toData=math.pi),
+                spatial.path.quatInterval(0.25, target_quat),
+            ),
+        ]
+
+        while type == TileType.ice:
+            target_pos.xy += vector
+            x, y = int(target_pos[0]), int(target_pos[1])
+            type = self.world.level.get_tile(x, y)
+
+            if type == TileType.ice:
+                sequence.append(spatial.path.posInterval(0.25, target_pos))
+            else:
+                sequence.append(spatial.path.posInterval(0.5, target_pos, blendType='easeOut'))
 
         if self.cracked_tile:
             # Break away the cracked tile
@@ -160,13 +180,8 @@ class PlayerControl(esper.Processor, DirectObject):
 
         self.moving = True
 
-        Sequence(
-            Parallel(
-                spatial.path.posInterval(0.25, target_pos),
-                LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.25, toData=math.pi),
-                spatial.path.quatInterval(0.25, target_quat),
-            ),
-            Func(self.stop_move)).start()
+        sequence.append(Func(self.stop_move))
+        Sequence(*sequence).start()
 
         return True
 
