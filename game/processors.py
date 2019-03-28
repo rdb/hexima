@@ -194,9 +194,17 @@ class Gravity(esper.Processor):
         self.acceleration = 1.0
 
     def process(self, dt):
+        removed = []
+
         for ent, (spatial, fall) in self.world.get_components(components.Spatial, components.Falling):
             fall.velocity += self.acceleration * dt * fall.drag
 
             spatial.path.set_z(spatial.path.get_z() - fall.velocity * dt)
 
             spatial.path.set_p(spatial.path.get_p() + dt)
+
+            if spatial.path.get_z() < -35:
+                removed.append(ent)
+
+        for ent in removed:
+            self.world.delete_entity(ent)
