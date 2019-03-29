@@ -92,6 +92,9 @@ class HUD:
             path.set_color_scale((1, 1, 1, 0))
         self.visible = False
 
+    def _child_item_added(self, item):
+        pass
+
     def show(self):
         if self.visible:
             return
@@ -133,10 +136,19 @@ class Button:
         else:
             self.icon_pivot = None
 
-        self.path.bind(DGG.ENTER, self.on_enter)
-        self.path.bind(DGG.EXIT, self.on_exit)
+        self.path.bind('enter-', self.on_focus)
+        self.path.bind('exit-', self.on_blur)
+        self.path.bind('fin-', self.on_focus)
+        self.path.bind('fout-', self.on_blur)
 
         self.path.set_shader_off(1)
+
+        self.path.set_color_scale((1, 1, 1, 0.6))
+
+        parent._child_item_added(self.path)
+
+    def focus(self):
+        self.path.guiItem.set_focus(True)
 
     def enable(self):
         self.path['state'] = DGG.NORMAL
@@ -144,17 +156,19 @@ class Button:
     def disable(self):
         self.path['state'] = DGG.DISABLED
 
-    def on_enter(self, p):
+    def on_focus(self, param=None):
         if self.icon_pivot is not None:
-            self.icon_pivot.hprInterval(0.4, (0, 0, 360), blendType='easeInOut').start()
+            self.icon_pivot.hprInterval(0.2, (0, 0, 360), blendType='easeInOut').start()
 
-        self.path.colorScaleInterval(0.4, (1, 1, 1, 1), blendType='easeInOut').start()
+        self.path.colorScaleInterval(0.2, (1, 1, 1, 1), blendType='easeInOut').start()
+        self.path.guiItem.set_state(2)
 
-    def on_exit(self, p):
+    def on_blur(self, param=None):
         if self.icon_pivot is not None:
-            self.icon_pivot.hprInterval(0.4, (0, 0, 0), blendType='easeInOut').start()
+            self.icon_pivot.hprInterval(0.2, (0, 0, 0), blendType='easeInOut').start()
 
-        self.path.colorScaleInterval(0.4, (1, 1, 1, 0.75), blendType='easeInOut').start()
+        self.path.colorScaleInterval(0.2, (1, 1, 1, 0.6), blendType='easeInOut').start()
+        self.path.guiItem.set_state(0)
 
 
 class Indicator:
@@ -220,6 +234,32 @@ class Screen:
         card.set_bin('fixed', 40)
         self.fade_card = card
 
+        self._first_item = None
+        self._prev_item = None
+
+    def _child_item_added(self, item):
+        # Set up keyboard navigation.
+        item.guiItem.add_click_button('enter')
+        item.guiItem.add_click_button('space')
+
+        item.bind('enter-', lambda p: item.guiItem.set_focus(True))
+        item.unbind('exit-')
+        item.bind('press-enter-', item.commandFunc)
+        item.bind('press-space-', item.commandFunc)
+
+        prev = self._prev_item
+        if prev is not None:
+            prev.bind('press-arrow_down-', lambda p: item.guiItem.set_focus(True))
+            item.bind('press-arrow_up-', lambda p: prev.guiItem.set_focus(True))
+
+        self._prev_item = item
+        if self._first_item is None:
+            self._first_item = item
+
+    def focus(self):
+        if self._first_item is not None:
+            self._first_item.guiItem.set_focus(True)
+
     def show(self):
         duration = 0.5
         Sequence(
@@ -231,6 +271,7 @@ class Screen:
                 LerpFunctionInterval(lambda x: self.fade_card.set_alpha_scale(x), duration, fromData=0.0, toData=0.5),
             ),
             Func(self.path.show),
+            Func(self.focus),
         ).start()
 
     def hide(self):

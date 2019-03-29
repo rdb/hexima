@@ -107,7 +107,15 @@ class GameApp(ShowBase):
         ui.Button(screen, 'terrible', pos=(0.0, -0.1), command=self.start_game, extraArgs=[1])
         self.quality_screen = screen
 
+        screen.focus()
+        self.game_started = False
+
     def start_game(self, quality):
+        if self.game_started:
+            return
+
+        self.game_started = True
+
         self.quality_screen.hide_now()
         self.quality = quality
 
@@ -258,6 +266,7 @@ class GameApp(ShowBase):
         self.world.hud.hide()
         self.level_select.show()
         self.back_button.enable()
+        self.world.player_control.lock()
         self.accept('escape', self.on_back)
 
     def on_back(self):
