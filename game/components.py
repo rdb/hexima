@@ -153,7 +153,7 @@ class Sun:
             lens = self.light.get_lens()
             lens.set_film_offset((bmin.xz + bmax.xz) * 0.5)
             lens.set_film_size(bmax.xz - bmin.xz)
-            lens.set_near_far(bmin.y, bmax.y)
+            lens.set_near_far(bmin.y - 0.5, bmax.y)
 
 
 class Symbol:
