@@ -49,6 +49,12 @@ class PlayerControl(esper.Processor, DirectObject):
 
         self.reload = True
 
+    def clear_state(self):
+        self.cracked_tile = None
+        self.button_tile = None
+        self.winning_move = False
+        self.reload = False
+
     def start_drag(self):
         if self.restore_interval:
             self.restore_interval.pause()
@@ -215,8 +221,8 @@ class PlayerControl(esper.Processor, DirectObject):
     def stop_move(self):
         if self.winning_move:
             self.lock()
-            self.world.win_level()
             self.winning_move = False
+            self.world.win_level()
 
         self.moving = False
 

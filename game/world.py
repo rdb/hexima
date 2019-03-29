@@ -149,6 +149,7 @@ class World(esper.World):
 
     def load_level(self, name):
         self.player_control.lock()
+        self.player_control.clear_state()
 
         level_dir = os.path.join(os.path.dirname(__file__), '..', 'levels')
         level = Level()
