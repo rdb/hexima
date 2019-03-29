@@ -129,11 +129,13 @@ class World(esper.World):
         try:
             level.read(os.path.join(level_dir, name + '.lvl'))
         except IOError as ex:
-            print("Failed to load level: {0}".format(ex))
+            print("Failed to load level {0}: {1}".format(name, ex))
             return
 
         self.level = level
         self.level_name = name
+
+        print("Loading level {0}".format(name))
 
         # Get the current tile that the player is on.
         spatial = self.component_for_entity(self.player, components.Spatial)
