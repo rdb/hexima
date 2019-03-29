@@ -50,6 +50,8 @@ class World(esper.World):
         self.add_component(sun, components.Sun((0.7, 0.4, -0.7), color_temperature=6000, intensity=2.05))
 
         self.teleporters = set()
+        self.toggle_tiles = set()
+        self.toggle_state = False
 
         self.level_root = self.root.attach_new_node("level")
         self.old_level_root = self.root.attach_new_node("old_levels")
@@ -95,12 +97,37 @@ class World(esper.World):
         die = self.component_for_entity(self.player, components.Die)
         spatial.path.set_hpr(0, 0, 0)
         die.die.reset()
+        self.toggle_state = False
 
         # Delete old tiles
         while len(self.old_tiles) > 3:
             oldest_tiles = self.old_tiles.pop(0)
             for tile in oldest_tiles:
                 self.delete_entity(tile)
+
+    def toggle_button(self):
+        self.toggle_state = not self.toggle_state
+
+        parallel = []
+
+        for x, y in self.toggle_tiles:
+            type = self.level.get_tile(x, y)
+            tile = self.tiles[(x, y)]
+            spatial = self.component_for_entity(tile, components.Spatial)
+
+            pos = core.Point3(spatial.path.get_pos())
+            if type.is_passable(1, self.toggle_state):
+                pos.y = y
+                pos.z = 0.0
+                parallel.append(spatial.path.hprInterval(0.75, (0, 0, 0), blendType='easeInOut'))
+                parallel.append(spatial.path.posInterval(0.75, pos, blendType='easeInOut'))
+            else:
+                pos.y = y - 0.5
+                pos.z = -0.5
+                parallel.append(spatial.path.hprInterval(0.75, (0, 90, 0), blendType='easeInOut'))
+                parallel.append(spatial.path.posInterval(0.75, pos, blendType='easeInOut'))
+
+        return Parallel(*parallel).start()
 
     def win_level(self):
         if not self.next_levels:
@@ -156,6 +183,7 @@ class World(esper.World):
         self.tiles.clear()
 
         self.teleporters.clear()
+        self.toggle_tiles.clear()
 
         i = 0
         entrance = None
@@ -173,6 +201,9 @@ class World(esper.World):
 
             if type == TileType.teleporter:
                 self.teleporters.add((x, y))
+
+            if type == TileType.active or type == TileType.inactive:
+                self.toggle_tiles.add((x, y))
 
             self.tiles[(x, y)] = tile
 
@@ -237,6 +268,13 @@ class World(esper.World):
         symbol = type.get_symbol()
         if symbol:
             self.add_component(tile, components.Symbol(symbol, color=(0.5, 0, 0, 1), font=base.symbol_font))
+
+        if type == TileType.inactive:
+            spatial.path.set_y(y - 0.5)
+            spatial.path.set_z(-0.5)
+            spatial.path.set_hpr(0, 90, 0)
+        elif type == TileType.active:
+            spatial.path.set_hpr(0, 0, 0)
 
         #glow = loader.load_model("gfx/glow.bam")
         #glow.set_attrib(core.ColorBlendAttrib.make(core.ColorBlendAttrib.M_add, core.ColorBlendAttrib.O_color_scale, core.ColorBlendAttrib.O_one))

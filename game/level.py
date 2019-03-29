@@ -18,12 +18,19 @@ class TileType(Enum):
     cracked = 'x'
     ice = 's'
     teleporter = 't'
+    button = 'o'
+    active = '/'
+    inactive = '\\'
 
-    def is_passable(self, dieval):
+    def is_passable(self, dieval, toggle_state=False):
         if self.value is None:
             return False
         if self.value in '123456':
             return int(self.value) == int(dieval)
+        elif self.value == '/':
+            return not toggle_state
+        elif self.value == '\\':
+            return toggle_state
         else:
             return True
 
@@ -40,6 +47,8 @@ class TileType(Enum):
             return (0.9, 0.3, 0.6, 1)
         elif self.value == 's':
             return (0.7, 0.95, 1.3, 0.7)
+        elif self.value == 'o':
+            return (1, 0.2, 0.2, 1.0)
         else:
             return (1, 1, 1, 1)
 

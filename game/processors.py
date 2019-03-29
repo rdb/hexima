@@ -121,7 +121,7 @@ class PlayerControl(esper.Processor, DirectObject):
         target_pos.xy += vector
         x, y = int(target_pos[0]), int(target_pos[1])
         type = self.world.level.get_tile(x, y)
-        if not type.is_passable(next_number) and not base.mouseWatcherNode.is_button_down('pause'):
+        if not type.is_passable(next_number, self.world.toggle_state) and not base.mouseWatcherNode.is_button_down('pause'):
             self.moving = True
             Sequence(
                 Parallel(
@@ -162,6 +162,9 @@ class PlayerControl(esper.Processor, DirectObject):
             if others:
                 target_pos.xy = others.pop()
                 sequence.append(spatial.path.posInterval(0.0, target_pos))
+
+        if type == TileType.button:
+            self.world.toggle_button()
 
         if self.cracked_tile:
             # Break away the cracked tile
