@@ -164,11 +164,38 @@ class PlayerControl(esper.Processor, DirectObject):
 
         if type == TileType.teleporter:
             # Find other teleporter.
+            x, y = int(target_pos[0]), int(target_pos[1])
             others = set(self.world.teleporters)
-            others.discard(tuple(target_pos.xy))
+            others.discard((x, y))
             if others:
-                target_pos.xy = others.pop()
-                sequence.append(spatial.path.posInterval(0.0, target_pos))
+                new_xy = others.pop()
+                new_target_pos = core.Point3(target_pos)
+                new_target_pos.xy = new_xy
+                tile1 = self.world.tiles[(x, y)]
+                tile2 = self.world.tiles[new_xy]
+                tile1_path = self.world.component_for_entity(tile1, components.Spatial).path
+                tile2_path = self.world.component_for_entity(tile2, components.Spatial).path
+                tile1_path.set_pos(new_target_pos)
+                tile2_path.set_pos(target_pos)
+                elevation = (0, 0, 0.65)
+                time = max((target_pos.xy - new_target_pos.xy).length() * 0.15, 0.35)
+                sequence.append(Parallel(
+                    Sequence(
+                        spatial.path.posInterval(0.25, target_pos + elevation, blendType='easeInOut'),
+                        spatial.path.posInterval(time, new_target_pos + elevation, blendType='easeInOut'),
+                        spatial.path.posInterval(0.25, new_target_pos, blendType='easeInOut'),
+                    ),
+                    Sequence(
+                        tile2_path.posInterval(0.25, target_pos + elevation, blendType='easeInOut'),
+                        tile2_path.posInterval(time, new_target_pos + elevation, blendType='easeInOut'),
+                        tile2_path.posInterval(0.25, new_target_pos, blendType='easeInOut'),
+                    ),
+                    Sequence(
+                        tile1_path.posInterval(0.25, new_target_pos - elevation, blendType='easeInOut'),
+                        tile1_path.posInterval(time, target_pos - elevation, blendType='easeInOut'),
+                        tile1_path.posInterval(0.25, target_pos, blendType='easeInOut'),
+                    ),
+                ))
 
         if self.button_tile:
             # Make the button raised again
