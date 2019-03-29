@@ -261,7 +261,8 @@ class World(esper.World):
         self.add_component(tile, spatial)
         self.add_component(tile, components.Model(type.get_model(), offset=(0, 0, -0.5), scale=0.98))
 
-        spatial.path.set_h(randint(0, 3) * 90)
+        if type.get_model() == "gfx/tile-cracked.bam":
+            spatial.path.set_h(randint(0, 3) * 90)
         spatial.path.set_color_scale(type.get_color())
         if type.get_color()[3] < 1.0:
             spatial.path.set_transparency(1)

@@ -44,7 +44,7 @@ class TileType(Enum):
         if self.value == 'e':
             return (0.5, 1, 0.5, 1.0)
         elif self.value == 't':
-            return (0.9, 0.3, 0.6, 1)
+            return (0.5, 0.3, 0.9, 1)
         elif self.value == 's':
             return (0.7, 0.95, 1.3, 0.7)
         elif self.value == 'o':
@@ -55,6 +55,8 @@ class TileType(Enum):
     def get_model(self):
         if self.value == 'x':
             return "gfx/tile-cracked.bam"
+        elif self.value == 'o':
+            return "gfx/tile-button.bam"
         else:
             return "gfx/tile.bam"
 
