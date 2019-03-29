@@ -78,7 +78,7 @@ void main() {
 
   p3d_FragColor.rgb *= p3d_ColorScale.rgb;
 
-  p3d_FragColor.rgb = mix(fog_color, p3d_FragColor.rgb, clamp(exp2(0.2 * (-vpos.z - 10) * -1.442695f), 0, 1));
+  p3d_FragColor.rgb = mix(fog_color, p3d_FragColor.rgb, clamp(exp2(0.25 * (-vpos.z - 10) * -1.442695f), 0, 1));
 
   p3d_FragColor.a = texcol.a * p3d_ColorScale.a;
 }

@@ -143,11 +143,8 @@ class Sun:
         path = world.root.attach_new_node(self.light)
         world.root.set_light(path)
 
-        shader = None
-        if base.quality > 1 or not base.has_fixed_function:
-            shader = core.Shader.load(core.Shader.SL_GLSL, 'assets/shader/lighting.vert', 'assets/shader/lighting.frag')
-        if shader:
-            world.root.set_shader(shader)
+        if base.lighting_shader:
+            world.root.set_shader(base.lighting_shader)
 
         world.root.set_depth_offset(-2)
 

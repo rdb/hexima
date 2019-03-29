@@ -20,7 +20,7 @@ class World(esper.World):
         # Add fog here for now
         fog = core.Fog("fog")
         fog.color = (0.31, 0.42, 0.53, 1.0)
-        fog.set_linear_range(10, 30)
+        fog.set_linear_range(10, 25)
         self.root.set_fog(fog)
 
         self.level = None
@@ -100,7 +100,7 @@ class World(esper.World):
         self.toggle_state = False
 
         # Delete old tiles
-        while len(self.old_tiles) > 3:
+        while len(self.old_tiles) > 2:
             oldest_tiles = self.old_tiles.pop(0)
             for tile in oldest_tiles:
                 self.delete_entity(tile)

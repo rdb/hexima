@@ -74,6 +74,8 @@ class GameApp(ShowBase):
         self.accept('escape', sys.exit)
         self.disable_mouse()
 
+        self.camLens.set_far(50)
+
         self.set_background_color((0.31, 0.42, 0.53))
 
         self.symbol_font = loader.load_font("font/FreeSerif.otf")
@@ -106,6 +108,11 @@ class GameApp(ShowBase):
 
         if quality >= 2:
             self.setup_filters()
+
+        if quality >= 2 or not self.has_fixed_function:
+            self.lighting_shader = core.Shader.load(core.Shader.SL_GLSL, 'assets/shader/lighting.vert', 'assets/shader/lighting.frag')
+        else:
+            self.lighting_shader = None
 
         self.world = World()
         self.world.root.reparent_to(self.render)
