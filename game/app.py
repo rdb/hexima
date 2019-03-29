@@ -4,6 +4,7 @@ from direct.showbase.ShowBase import ShowBase
 from direct.filter.FilterManager import FilterManager
 from panda3d import core
 import pman.shim
+import json
 
 from .world import World
 from .packs import level_packs
@@ -88,6 +89,13 @@ class GameApp(ShowBase):
         self.title_font = loader.load_font("font/Quicksand-Light.otf")
         self.title_font.set_pixels_per_unit(128)
 
+        self.icon_fonts = {
+            'solid': loader.load_font("font/font-awesome5-solid.otf"),
+            'regular': loader.load_font("font/font-awesome5-regular.otf"),
+        }
+        for font in self.icon_fonts.values():
+            font.set_pixels_per_unit(64)
+
         self.blur_shader = core.Shader.load(core.Shader.SL_GLSL, "shader/blur.vert", "shader/blur.frag")
         self.blur_scale = core.PTA_float([1.0])
 
@@ -100,7 +108,7 @@ class GameApp(ShowBase):
         self.quality_screen = screen
 
     def start_game(self, quality):
-        self.quality_screen.hide()
+        self.quality_screen.hide_now()
         self.quality = quality
 
         if quality >= 3:
@@ -121,6 +129,8 @@ class GameApp(ShowBase):
         num_packs = len(level_packs)
         x = (num_packs - 1) * -0.2
 
+        self.level_buttons = {}
+
         screen = ui.Screen("level select")
         for pack_name, levels in level_packs:
             while len(levels) < 6:
@@ -129,19 +139,76 @@ class GameApp(ShowBase):
 
             y = 0
             for l, r in (1, 2), (3, 4), (5, 6):
-                ui.LevelButton(panel, l, (-0.05, y), command=self.on_switch_level, extraArgs=[pack_name, l-1], locked=not levels[l-1])
-                ui.LevelButton(panel, r, (0.05, y), command=self.on_switch_level, extraArgs=[pack_name, r-1], locked=not levels[r-1])
+                level_l = levels[l-1]
+                level_r = levels[r-1]
+                btn_l = ui.LevelButton(panel, l, (-0.05, y), command=self.on_switch_level, extraArgs=[pack_name, l-1], locked=not level_l)
+                btn_r = ui.LevelButton(panel, r, (0.05, y), command=self.on_switch_level, extraArgs=[pack_name, r-1], locked=not level_r)
+                if level_l:
+                    self.level_buttons[level_l] = btn_l
+                if level_r:
+                    self.level_buttons[level_r] = btn_r
                 y -= 0.1
 
             panel.path.set_x(x)
             x += 0.4
 
-        ui.Button(screen, 'back', pos=(-0.2, -0.5))
+        self.back_button = ui.Button(screen, '     back', pos=(-0.2, -0.5), icon='', disabled=True, command=self.on_back)
         self.level_select = screen
+
+        self.load_save_state()
 
         self.accept('escape', self.on_escape)
 
         self.task_mgr.add(self.process_world)
+
+        screen.show()
+
+    def load_save_state(self):
+        try:
+            data = json.load(open('save.json', 'r'))
+        except Exception as ex:
+            print("Failed to load saves: {0}".format(ex))
+            data = {}
+
+        self.update_level_overview(data)
+
+    def update_save_state(self, level, score, star=False):
+        try:
+            data = json.load(open('save.json', 'r'))
+        except Exception as ex:
+            print("Failed to load saves: {0}".format(ex))
+            data = {}
+
+        if 'levels' not in data:
+            data['levels'] = {}
+
+        if level not in data['levels']:
+            state = {'best': score, 'star': star}
+            data['levels'][level] = state
+        else:
+            state = data['levels'][level]
+            state['best'] = min(state.get('best', score), score)
+            state['star'] = state.get(star, False) or star
+
+        self.update_level_overview(data)
+
+        try:
+            json.dump(data, open('save.json', 'w'))
+        except Exception as ex:
+            print("Failed to write saves: {0}".format(ex))
+
+    def update_level_overview(self, data):
+        level_states = data.get('levels', {})
+
+        for pack_name, levels in level_packs:
+            for level in levels:
+                button = self.level_buttons.get(level, None)
+                if button:
+                    state = level_states.get(level, {})
+                    if state.get('star'):
+                        button.set_badge('', style='solid', color=(1, 0.8, 0.3, 1))
+                    elif state.get('best'):
+                        button.set_badge('', style='solid', color=(0.2, 0.8, 0.1, 1))
 
     def setup_filters(self):
         self.filters = MyFilterManager(base.win, base.cam)
@@ -154,25 +221,26 @@ class GameApp(ShowBase):
 
         prev_tex = self.scene_tex
 
-        intermediate_tex = core.Texture()
-        intermediate_tex.set_minfilter(core.Texture.FT_linear)
-        intermediate_tex.set_magfilter(core.Texture.FT_linear)
-        intermediate_quad = self.filters.render_quad_into("blur-x", colortex=intermediate_tex)
-        intermediate_quad.set_shader_input("image", prev_tex)
-        intermediate_quad.set_shader_input("direction", (2, 0))
-        intermediate_quad.set_shader_input("scale", self.blur_scale)
-        intermediate_quad.set_shader(self.blur_shader)
-        prev_tex = intermediate_tex
+        if self.quality >= 3:
+            intermediate_tex = core.Texture()
+            intermediate_tex.set_minfilter(core.Texture.FT_linear)
+            intermediate_tex.set_magfilter(core.Texture.FT_linear)
+            intermediate_quad = self.filters.render_quad_into("blur-x", colortex=intermediate_tex)
+            intermediate_quad.set_shader_input("image", prev_tex)
+            intermediate_quad.set_shader_input("direction", (2, 0))
+            intermediate_quad.set_shader_input("scale", self.blur_scale)
+            intermediate_quad.set_shader(self.blur_shader)
+            prev_tex = intermediate_tex
 
-        intermediate_tex = core.Texture()
-        intermediate_tex.set_minfilter(core.Texture.FT_linear)
-        intermediate_tex.set_magfilter(core.Texture.FT_linear)
-        intermediate_quad = self.filters.render_quad_into("blur-y", colortex=intermediate_tex)
-        intermediate_quad.set_shader_input("image", prev_tex)
-        intermediate_quad.set_shader_input("direction", (0, 2))
-        intermediate_quad.set_shader_input("scale", self.blur_scale)
-        intermediate_quad.set_shader(self.blur_shader)
-        prev_tex = intermediate_tex
+            intermediate_tex = core.Texture()
+            intermediate_tex.set_minfilter(core.Texture.FT_linear)
+            intermediate_tex.set_magfilter(core.Texture.FT_linear)
+            intermediate_quad = self.filters.render_quad_into("blur-y", colortex=intermediate_tex)
+            intermediate_quad.set_shader_input("image", prev_tex)
+            intermediate_quad.set_shader_input("direction", (0, 2))
+            intermediate_quad.set_shader_input("scale", self.blur_scale)
+            intermediate_quad.set_shader(self.blur_shader)
+            prev_tex = intermediate_tex
 
         intermediate_tex = core.Texture()
         intermediate_tex.set_minfilter(core.Texture.FT_linear)
@@ -187,7 +255,18 @@ class GameApp(ShowBase):
         self.blurred_tex = prev_tex
 
     def on_escape(self):
+        self.world.hud.hide()
         self.level_select.show()
+        self.back_button.enable()
+        self.accept('escape', self.on_back)
+
+    def on_back(self):
+        if self.world.level:
+            if self.world.move_counter.value > 0:
+                self.world.hud.show()
+            self.level_select.hide()
+            self.world.player_control.unlock()
+            self.accept('escape', self.on_escape)
 
     def on_switch_level(self, pack_name, li):
         pack = dict(level_packs)[pack_name]

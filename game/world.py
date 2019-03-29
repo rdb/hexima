@@ -3,6 +3,7 @@ import esper
 
 from . import components
 from . import processors
+from . import ui
 from .level import Level, TileType
 
 from direct.interval.IntervalGlobal import LerpFunctionInterval, Func, Sequence, Parallel
@@ -60,6 +61,11 @@ class World(esper.World):
 
         self.add_processor(processors.Gravity(1.0))
 
+        self.hud = ui.HUD()
+        ui.Button(self.hud, "      reset", (0.2, -0.13), icon="", command=self.player_control.on_reload, anchor='top-left')
+
+        self.move_counter = ui.Indicator(self.hud, 0, (-0.17, -0.13), anchor='top-right')
+
         self.setup()
 
     def delete_entity(self, ent):
@@ -90,6 +96,13 @@ class World(esper.World):
         for ent, symbol in self.get_component(components.Symbol):
             symbol.setup(self, ent)
 
+    def on_player_move(self):
+        self.hud.show()
+
+        new_value = self.move_counter.inc_value()
+        if self.level.par is not None and new_value > self.level.par:
+            self.move_counter.set_icon('', style='regular')
+
     def on_level_start(self):
         self.player_control.unlock()
 
@@ -104,6 +117,12 @@ class World(esper.World):
             oldest_tiles = self.old_tiles.pop(0)
             for tile in oldest_tiles:
                 self.delete_entity(tile)
+
+        if self.level.par is not None:
+            self.move_counter.set_icon('', style='solid')
+        else:
+            self.move_counter.clear_icon()
+        self.move_counter.set_value(0)
 
     def toggle_button(self):
         self.toggle_state = not self.toggle_state
@@ -130,13 +149,18 @@ class World(esper.World):
         return Parallel(*parallel).start()
 
     def win_level(self):
+        star = False
+        if self.level.par is not None and self.move_counter.value <= self.level.par:
+            star = True
+        base.update_save_state(self.level_name, self.move_counter.value, star=star)
+
         if not self.next_levels:
-            messenger.send('escape')
+            base.on_escape()
             return
 
         level = self.next_levels.pop(0)
         if not level:
-            messenger.send('escape')
+            base.on_escape()
             return
 
         self.load_level(level)
@@ -148,6 +172,7 @@ class World(esper.World):
         self.load_level(self.level_name)
 
     def load_level(self, name):
+        self.hud.hide()
         self.player_control.lock()
         self.player_control.clear_state()
 

@@ -22,7 +22,7 @@ class PlayerControl(esper.Processor, DirectObject):
         self.accept('arrow_right', self.move_right)
         self.accept('mouse1', self.start_drag)
         self.accept('mouse1-up', self.stop_drag)
-        self.accept('r', self.reload)
+        self.accept('r', self.on_reload)
 
         self.locked = True
         self.moving = False
@@ -43,7 +43,7 @@ class PlayerControl(esper.Processor, DirectObject):
         self.locked = False
         assert self.world.level
 
-    def reload(self):
+    def on_reload(self):
         if self.locked:
             return
 
@@ -242,6 +242,8 @@ class PlayerControl(esper.Processor, DirectObject):
 
         sequence.append(Func(self.stop_move))
         Sequence(*sequence).start()
+
+        self.world.on_player_move()
 
         return True
 

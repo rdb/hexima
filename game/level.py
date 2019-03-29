@@ -65,12 +65,19 @@ class Level:
     def __init__(self):
         self.rows = []
         self.entrance = (0, 0)
+        self.par = None
 
     def read(self, fn):
         self.rows.clear()
 
         for line in open(fn, 'r').readlines():
             line = line.rstrip()
+
+            if line.startswith('#'):
+                line = line.lstrip('# ')
+                self.par = int(line)
+                continue
+
             if 'b' in line:
                 self.entrance = line.index('b'), len(self.rows)
             self.rows.append(line)
