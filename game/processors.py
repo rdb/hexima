@@ -1,5 +1,5 @@
 from direct.showbase.DirectObject import DirectObject
-from direct.interval.IntervalGlobal import LerpFunctionInterval, Func, Sequence, Parallel
+from direct.interval.IntervalGlobal import LerpFunctionInterval, Func, Sequence, Parallel, Wait
 from panda3d import core
 import esper
 import math
@@ -30,6 +30,7 @@ class PlayerControl(esper.Processor, DirectObject):
         self.dragging_pos = None
         self.restore_interval = None
         self.cracked_tile = None
+        self.button_tile = None
         self.reload = False
 
     def lock(self):
@@ -137,13 +138,13 @@ class PlayerControl(esper.Processor, DirectObject):
                 Func(self.stop_move)).start()
             return False
 
-        sequence = [
-            Parallel(
-                spatial.path.posInterval(0.25, target_pos),
-                LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.25, toData=math.pi),
-                spatial.path.quatInterval(0.25, target_quat),
-            ),
+        # Build up the animation; the parallel gets prepended to the sequence
+        parallel = [
+            spatial.path.posInterval(0.25, target_pos),
+            LerpFunctionInterval(lambda x: spatial.path.set_z(math.sin(x) * z_scale), 0.25, toData=math.pi),
+            spatial.path.quatInterval(0.25, target_quat),
         ]
+        sequence = []
 
         while type == TileType.ice:
             target_pos.xy += vector
@@ -163,8 +164,12 @@ class PlayerControl(esper.Processor, DirectObject):
                 target_pos.xy = others.pop()
                 sequence.append(spatial.path.posInterval(0.0, target_pos))
 
-        if type == TileType.button:
-            self.world.toggle_button()
+        if self.button_tile:
+            # Make the button raised again
+            button_path = self.world.component_for_entity(self.button_tile, components.Spatial).path
+            button_pos = core.LPoint3(button_path.get_pos())
+            button_pos.z = 0.07
+            parallel.append(button_path.posInterval(0.25, button_pos))
 
         if self.cracked_tile:
             # Break away the cracked tile
@@ -180,6 +185,15 @@ class PlayerControl(esper.Processor, DirectObject):
             self.world.level.remove_tile(x, y)
             del self.world.tiles[(x, y)]
 
+        if type == TileType.button:
+            button_tile = self.world.tiles[(x, y)]
+            button_path = self.world.component_for_entity(button_tile, components.Spatial).path
+            button_pos = core.LPoint3(button_path.get_pos())
+            button_pos.z = 0.0
+            parallel.append(button_path.posInterval(0.25, button_pos))
+            parallel.append(Sequence(Wait(0.1), Func(self.world.toggle_button)))
+            self.button_tile = button_tile
+
         if dir == 'N':
             die.die.rotate_north()
         elif dir == 'E':
@@ -190,6 +204,8 @@ class PlayerControl(esper.Processor, DirectObject):
             die.die.rotate_west()
 
         self.moving = True
+
+        sequence.insert(0, Parallel(*parallel))
 
         sequence.append(Func(self.stop_move))
         Sequence(*sequence).start()

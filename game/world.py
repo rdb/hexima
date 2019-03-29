@@ -269,7 +269,9 @@ class World(esper.World):
         if symbol:
             self.add_component(tile, components.Symbol(symbol, color=(0.5, 0, 0, 1), font=base.symbol_font))
 
-        if type == TileType.inactive:
+        if type == TileType.button:
+            spatial.path.set_z(0.07)
+        elif type == TileType.inactive:
             spatial.path.set_y(y - 0.5)
             spatial.path.set_z(-0.5)
             spatial.path.set_hpr(0, 90, 0)
