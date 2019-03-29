@@ -72,6 +72,7 @@ class GameApp(ShowBase):
         pman.shim.init(self)
 
         self.accept('escape', sys.exit)
+        self.accept('f12', self.screenshot)
         self.disable_mouse()
 
         self.camLens.set_far(50)
