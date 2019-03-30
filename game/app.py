@@ -62,7 +62,7 @@ class GameApp(ShowBase):
             self.open_default_window(props=props)
             print("The window seemed to have opened this time around.")
 
-        gsg = base.win.gsg
+        gsg = self.win.gsg
         gl_version = (gsg.driver_version_major, gsg.driver_version_minor)
         self.has_fixed_function = gl_version < (3, 2) or \
             gsg.has_extension("GL_ARB_compatibility")
@@ -78,7 +78,21 @@ class GameApp(ShowBase):
 
         self.camLens.set_far(50)
 
+        # Load in background
         self.set_background_color((0.31, 0.42, 0.53))
+        sky = loader.load_model("gfx/sky.bam")
+        sky.reparent_to(self.camera)
+        sky.set_scale(10)
+        sky.set_bin('background', 0)
+        sky.set_depth_write(False)
+        sky.set_depth_test(False)
+        sky.set_shader_off(1)
+        sky.set_compass()
+        if self.win.get_fb_properties().srgb_color:
+            for tex in sky.find_all_textures():
+                tex.set_format(core.Texture.F_srgb)
+        else:
+            print("Did not get an sRGB framebuffer.  The game may appear too dark.")
 
         self.symbol_font = loader.load_font("font/FreeSerif.otf")
         self.symbol_font.set_pixels_per_unit(64)
