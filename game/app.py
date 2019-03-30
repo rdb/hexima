@@ -6,6 +6,7 @@ import direct.gui.DirectGuiGlobals as DGG
 from direct.interval.IntervalGlobal import Sequence, Func, LerpFunctionInterval
 from panda3d import core
 import json
+import os
 
 from .world import World
 from .packs import level_packs
@@ -432,21 +433,33 @@ class GameApp(ShowBase):
             self.ensure_music('menu')
             self.music_button.set_text('music: on')
 
-    def load_save_state(self):
-        try:
-            data = json.load(open('save.json', 'r'))
-        except Exception as ex:
-            print("Failed to load saves: {0}".format(ex))
+    def _load_save_data(self):
+        save_file = os.path.join(self.mainDir, 'save.json')
+        if os.path.exists(save_file):
+            print("Loading saves from {0}".format(save_file))
+            try:
+                data = json.load(open('save.json', 'r'))
+            except Exception as ex:
+                print("Failed to load saves: {0}".format(ex))
+                data = {}
+        else:
+            print("A new save file will be created in {0}".format(save_file))
             data = {}
+            try:
+                fp = open(save_file, 'w')
+                fp.write('{}')
+                fp.close()
+            except:
+                pass
 
+        return data
+
+    def load_save_state(self):
+        data = self._load_save_data()
         self.update_level_overview(data)
 
     def update_save_state(self, level, score, star=False, par=None):
-        try:
-            data = json.load(open('save.json', 'r'))
-        except Exception as ex:
-            print("Failed to load saves: {0}".format(ex))
-            data = {}
+        data = self._load_save_data()
 
         if 'levels' not in data:
             data['levels'] = {}
