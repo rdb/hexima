@@ -34,7 +34,7 @@ class World(esper.World):
         player = self.create_entity()
         self.add_component(player, components.Spatial(parent=self.root))
         self.add_component(player, components.Die())
-        self.add_component(player, components.Model("gfx/d6/d6.bam", offset=(0, 0, -0.5), scale=0.96/7.0))
+        self.add_component(player, components.Model("gfx/die.bam", offset=(0, 0, -0.5), scale=0.96))
         self.player = player
 
         # Create camera entity
