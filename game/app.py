@@ -180,7 +180,7 @@ class GameApp(ShowBase):
 
         self.update_level_overview(data)
 
-    def update_save_state(self, level, score, star=False):
+    def update_save_state(self, level, score, star=False, par=None):
         try:
             data = json.load(open('save.json', 'r'))
         except Exception as ex:
@@ -196,12 +196,20 @@ class GameApp(ShowBase):
         else:
             state = data['levels'][level]
             state['best'] = min(state.get('best', score), score)
-            state['star'] = state.get(star, False) or star
+            if score <= state['best']:
+                # This is our best score, if we didn't get a star, or the par
+                # changed, ignore whether we previously had a star.
+                state['star'] = star
+            else:
+                state['star'] = state.get('star', False) or star
+
+        if par is not None:
+            state['par'] = par
 
         self.update_level_overview(data)
 
         try:
-            json.dump(data, open('save.json', 'w'))
+            json.dump(data, open('save.json', 'w'), indent=4, sort_keys=True)
         except Exception as ex:
             print("Failed to write saves: {0}".format(ex))
 

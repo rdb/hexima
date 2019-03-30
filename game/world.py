@@ -150,9 +150,19 @@ class World(esper.World):
 
     def win_level(self):
         star = False
-        if self.level.par is not None and self.move_counter.value <= self.level.par:
-            star = True
-        base.update_save_state(self.level_name, self.move_counter.value, star=star)
+        num_moves = self.move_counter.value
+        if self.level.par is not None:
+            if num_moves < self.level.par:
+                star = True
+                print("Beat level {0} in {1} moves, exceeding requirement for star ({2})!".format(self.level_name, num_moves, self.level.par))
+            elif num_moves == self.level.par:
+                star = True
+                print("Beat level {0} in {1} moves, got star".format(self.level_name, num_moves))
+            else:
+                print("Beat level {0} in {1} moves ({2} needed for star)".format(self.level_name, num_moves, self.level.par))
+        else:
+            print("Beat level {0} in {1} moves".format(self.level_name, num_moves))
+        base.update_save_state(self.level_name, num_moves, star=star, par=self.level.par)
 
         if not self.next_levels:
             base.on_escape()
