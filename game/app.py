@@ -146,10 +146,12 @@ class GameApp(ShowBase):
 
             self.title_font.clear()
             self.title_font.set_pixels_per_unit(192)
+            self.title_font.set_page_size(512, 256)
 
             for font in self.icon_fonts.values():
                 font.clear()
                 font.set_pixels_per_unit(96)
+                font.set_page_size(512, 256)
 
         if quality >= 2:
             self.setup_filters()
