@@ -124,7 +124,11 @@ class World(esper.World):
         self.toggle_state = False
 
         # Delete old tiles
-        while len(self.old_tiles) > 2:
+        max_old_tiles = 2
+        if base.quality < 2:
+            max_old_tiles = 1
+
+        while len(self.old_tiles) > max_old_tiles:
             oldest_tiles = self.old_tiles.pop(0)
             for tile in oldest_tiles:
                 self.delete_entity(tile)
