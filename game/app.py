@@ -137,6 +137,20 @@ class GameApp(ShowBase):
             MyFilterManager.multisamples = 16
             self.render.set_antialias(core.AntialiasAttrib.M_multisample)
 
+            # Increase the quality of all the fonts.
+            self.symbol_font.clear()
+            self.symbol_font.set_pixels_per_unit(128)
+
+            self.regular_font.clear()
+            self.regular_font.set_pixels_per_unit(96)
+
+            self.title_font.clear()
+            self.title_font.set_pixels_per_unit(192)
+
+            for font in self.icon_fonts.values():
+                font.clear()
+                font.set_pixels_per_unit(96)
+
         if quality >= 2:
             self.setup_filters()
 
