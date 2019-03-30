@@ -5,7 +5,7 @@ ignore_patterns = [ "*.blend1", "*.blend2",]
 converters = [ "blend2bam", "native2bam",]
 
 [general]
-name = "Six"
+name = "hexima"
 renderer = "none"
 material_mode = "legacy"
 physics_engine = "builtin"
