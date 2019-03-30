@@ -156,8 +156,12 @@ class PlayerControl(esper.Processor, DirectObject):
         ]
         sequence = []
 
-        if type == TileType.ice and base.slide_sound:
-            sequence.append(Func(base.slide_sound.play))
+        if type == TileType.ice:
+            if base.slide_sound:
+                sequence.append(Func(base.slide_sound.play))
+        else:
+            if base.move_sound:
+                sequence.append(Func(base.move_sound.play))
 
         while type == TileType.ice:
             target_pos.xy += vector

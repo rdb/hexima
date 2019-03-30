@@ -103,9 +103,6 @@ class World(esper.World):
     def on_player_move(self):
         self.hud.show()
 
-        if base.move_sound:
-            base.move_sound.play()
-
         new_value = self.move_counter.inc_value()
         if self.level.par is not None and new_value > self.level.par:
             self.move_counter.set_icon('', style='regular')
