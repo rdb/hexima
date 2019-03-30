@@ -1,8 +1,8 @@
 level_packs = [
-    ("one", ["intro", "level0", "level1", "level2", "level3", "level5"]),
-    ("two", ["level19", "level4", "level6", "level7", "level8", "level11"]),
-    ("three", ["level12", "level13", "level14", "level15", "level16", "level17"]),
-    ("four", ["level18", "level19", "level20", "level21", "level22", "level23"]),
-    ("five", ["level24", "level25", "level26", "level27", "level28", "level29"]),
-    ("six", ["level30", "level31", "level32", "level33", "level34", "level35"]),
+    ("one", ["intro", "level0", "level1", "level3", "level18", "level5"]),
+    ("two", ["level33", "level20", "level19", "level21", "level35", "level16"]),
+    ("three", ["level2", "level14", "level6", "level25", "level32", "level8"]),
+    ("four", ["level15", "level10", "leve22", "level12", "level4", "level13"]),
+    ("five", ["level11", "level31", "level17", "level7", "level34", "level9"]),
+    ("six", ["level26", "level24", "level28", "level30", "level27", "level29"]),
 ]
