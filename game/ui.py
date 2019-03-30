@@ -203,6 +203,11 @@ class Icon:
                 Func(old_icon.destroy),
             ).start()
 
+    def flash(self, color):
+        if self.icon:
+            self.icon.set_color_scale(color)
+            self.icon.colorScaleInterval(1.5, (1, 1, 1, 1)).start()
+
 
 class Indicator:
     def __init__(self, parent, value=0, pos=(0, 0), size=(0.4, 0.2), icon=None, icon_style='solid', anchor=None):

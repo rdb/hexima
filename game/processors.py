@@ -143,6 +143,7 @@ class PlayerControl(esper.Processor, DirectObject):
                 ),
                 Func(self.stop_move)).start()
             if type.value and type.value in '123456':
+                self.world.die_icon.flash((1, 0, 0, 1))
                 if base.impassable_sound:
                     base.impassable_sound.play()
             return False
