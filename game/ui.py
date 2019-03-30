@@ -268,8 +268,8 @@ class Screen:
         cm.set_frame_fullscreen_quad()
         card = render2d.attach_new_node(cm.generate())
 
-        if base.quality is None or base.quality >= 2:
-            card.set_color(core.LColor(base.win.clear_color.xyz * 0.35, 0.5))
+        if base.quality is None or base.quality >= 3:
+            card.set_color(core.LColor(0, 0, 0, 0.5))
         else:
             card.set_color(core.LColor(0, 0, 0, 1))
 
