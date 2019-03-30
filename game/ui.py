@@ -293,6 +293,15 @@ class Screen:
             prev.bind('press-arrow_down-', lambda p: item.guiItem.set_focus(True))
             item.bind('press-arrow_up-', lambda p: prev.guiItem.set_focus(True))
 
+        sound = item['clickSound']
+        if sound:
+            item.guiItem.set_sound('press-enter-' + item.guiId, sound)
+
+        sound = item['rolloverSound']
+        if sound:
+            item.guiItem.set_sound('press-arrow_up-' + item.guiId, sound)
+            item.guiItem.set_sound('press-arrow_down-' + item.guiId, sound)
+
         self._prev_item = item
         if self._first_item is None:
             self._first_item = item

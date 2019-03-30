@@ -142,6 +142,9 @@ class PlayerControl(esper.Processor, DirectObject):
                     spatial.path.quatInterval(0.05, orig_quat, blendType='easeIn'),
                 ),
                 Func(self.stop_move)).start()
+            if type.value and type.value in '123456':
+                if base.impassable_sound:
+                    base.impassable_sound.play()
             return False
 
         # Build up the animation; the parallel gets prepended to the sequence
@@ -179,6 +182,8 @@ class PlayerControl(esper.Processor, DirectObject):
                 tile2_path.set_pos(target_pos)
                 elevation = (0, 0, 0.65)
                 time = max((target_pos.xy - new_target_pos.xy).length() * 0.15, 0.35)
+                if base.transport_sound:
+                    sequence.append(Func(base.transport_sound.play))
                 sequence.append(Parallel(
                     Sequence(
                         spatial.path.posInterval(0.25, target_pos + elevation, blendType='easeInOut'),
@@ -225,6 +230,8 @@ class PlayerControl(esper.Processor, DirectObject):
             button_pos.z = 0.0
             parallel.append(button_path.posInterval(0.25, button_pos))
             parallel.append(Sequence(Wait(0.1), Func(self.world.toggle_button)))
+            if base.button_sound:
+                parallel.append(Func(base.button_sound.play))
             self.button_tile = button_tile
 
         if dir == 'N':
