@@ -143,6 +143,35 @@ class GameApp(ShowBase):
         self.have_save = False
         self.blurred = True
 
+        self.accept('connect-device', self.on_connect_device)
+        self.accept('disconnect-device', self.on_disconnect_device)
+        self.gamepads = set()
+
+        dev_mgr = core.InputDeviceManager.get_global_ptr()
+        for device in dev_mgr.get_devices(core.InputDevice.DeviceClass.gamepad):
+            self.on_connect_device(device)
+
+    def on_connect_device(self, device):
+        if device in self.gamepads:
+            return
+
+        if device.device_class != core.InputDevice.DeviceClass.gamepad:
+            print("Ignoring non-gamepad device {0}".format(device))
+
+        print("Connected gamepad device {0}".format(device))
+        self.gamepads.add(device)
+        self.attach_input_device(device, prefix='gamepad-')
+
+        self._ShowBase__inputDeviceNodes[device].node().add_child(self.mouseWatcherNode)
+
+    def on_disconnect_device(self, device):
+        if device not in self.gamepads:
+            return
+
+        print("Disconnected gamepad device {0}".format(device))
+        self.gamepads.discard(device)
+        self.detach_input_device(device)
+
     def setup_game(self, quality):
         if self.game_setup:
             return
@@ -255,7 +284,7 @@ class GameApp(ShowBase):
         ui.Button(self.pause_screen, 'skip level', pos=(0, -0.15*2), command=self.skip_level)
         ui.Button(self.pause_screen, 'main menu', pos=(0, -0.15*3), command=self.show_main)
 
-        self.accept('escape', self.show_quit)
+        self.accept_back(self.show_quit)
 
         self.ensure_music('menu')
 
@@ -306,6 +335,11 @@ class GameApp(ShowBase):
             self.wind_sound.play()
             LerpFunctionInterval(lambda x: self.wind_sound.set_volume(x), 0.5, fromData=0.0, toData=1.0).start()
 
+    def accept_back(self, func):
+        self.accept('escape', func)
+        self.accept('back', func)
+        self.accept('start', func)
+
     def show_quit(self):
         self.world.hud.hide()
         self.current_screen.hide()
@@ -313,7 +347,7 @@ class GameApp(ShowBase):
         self.current_screen = self.quit_screen
         self.blur()
         self.world.player_control.lock()
-        self.accept('escape', self.show_main)
+        self.accept_back(self.show_main)
 
     def show_main(self):
         self.world.hud.hide()
@@ -322,7 +356,7 @@ class GameApp(ShowBase):
         self.current_screen = self.main_menu
         self.blur()
         self.world.player_control.lock()
-        self.accept('escape', self.show_quit)
+        self.accept_back(self.show_quit)
         self.ensure_music('menu')
 
     def show_new_game(self):
@@ -332,7 +366,7 @@ class GameApp(ShowBase):
         self.current_screen = self.new_game_screen
         self.blur()
         self.world.player_control.lock()
-        self.accept('escape', self.show_main)
+        self.accept_back(self.show_main)
 
     def show_level_select(self):
         self.world.hud.hide()
@@ -341,7 +375,7 @@ class GameApp(ShowBase):
         self.current_screen = self.level_select
         self.blur()
         self.world.player_control.lock()
-        self.accept('escape', self.show_main)
+        self.accept_back(self.show_main)
 
     def show_pause(self):
         self.world.hud.hide()
@@ -350,7 +384,7 @@ class GameApp(ShowBase):
         self.current_screen = self.pause_screen
         self.blur()
         self.world.player_control.lock()
-        self.accept('escape', self.continue_game)
+        self.accept_back(self.continue_game)
 
     def start_new_game(self):
         self.erase_save_state()
@@ -359,7 +393,7 @@ class GameApp(ShowBase):
     def start_game(self, pack_name, li):
         self.current_screen.hide()
         self.unblur()
-        self.accept('escape', self.show_pause)
+        self.accept_back(self.show_pause)
 
         pack = dict(level_packs)[pack_name]
         if li >= len(pack):
@@ -384,7 +418,7 @@ class GameApp(ShowBase):
             self.current_screen.hide()
             self.unblur()
             self.load_save_state()
-            self.accept('escape', self.show_pause)
+            self.accept_back(self.show_pause)
 
             self.world.player_control.unlock()
             self.world.hud.show()
@@ -393,13 +427,13 @@ class GameApp(ShowBase):
         self.current_screen.hide()
         self.unblur()
         self.world.reload_level()
-        self.accept('escape', self.show_pause)
+        self.accept_back(self.show_pause)
 
     def skip_level(self):
         self.current_screen.hide()
         self.unblur()
         self.world.load_next_level()
-        self.accept('escape', self.show_pause)
+        self.accept_back(self.show_pause)
 
     def erase_save_state(self):
         print("Erasing save state")

@@ -287,25 +287,36 @@ class Screen:
         # Set up keyboard navigation.
         item.guiItem.add_click_button('enter')
         item.guiItem.add_click_button('space')
+        item.guiItem.add_click_button('face_a')
+        item.guiItem.add_click_button('face_x')
 
         item.bind('enter-', lambda p: item.guiItem.set_focus(True))
         item.unbind('exit-')
         item.bind('press-enter-', item.commandFunc)
         item.bind('press-space-', item.commandFunc)
+        item.bind('press-face_a-', item.commandFunc)
+        item.bind('press-face_x-', item.commandFunc)
 
         prev = self._prev_item
         if prev is not None:
             prev.bind('press-arrow_down-', lambda p: item.guiItem.set_focus(True))
+            prev.bind('press-dpad_down-', lambda p: item.guiItem.set_focus(True))
             item.bind('press-arrow_up-', lambda p: prev.guiItem.set_focus(True))
+            item.bind('press-dpad_up-', lambda p: prev.guiItem.set_focus(True))
 
         sound = item['clickSound']
         if sound:
             item.guiItem.set_sound('press-enter-' + item.guiId, sound)
+            item.guiItem.set_sound('press-space-' + item.guiId, sound)
+            item.guiItem.set_sound('press-face_a-' + item.guiId, sound)
+            item.guiItem.set_sound('press-face_x-' + item.guiId, sound)
 
         sound = item['rolloverSound']
         if sound:
             item.guiItem.set_sound('press-arrow_up-' + item.guiId, sound)
+            item.guiItem.set_sound('press-dpad_up-' + item.guiId, sound)
             item.guiItem.set_sound('press-arrow_down-' + item.guiId, sound)
+            item.guiItem.set_sound('press-dpad_down-' + item.guiId, sound)
 
         self._prev_item = item
         if self._first_item is None:
