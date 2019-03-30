@@ -174,7 +174,7 @@ class Symbol:
         #path.set_shader_off(1)
         #path.set_light_off(1)
         path.set_hpr(0, -90, 0)
-        path.set_pos(0, -0.3, -0.499)
+        path.set_pos(0, -0.25, -0.499)
 
 
 class Falling:
