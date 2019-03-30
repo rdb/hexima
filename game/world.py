@@ -66,6 +66,10 @@ class World(esper.World):
 
         self.move_counter = ui.Indicator(self.hud, 0, (-0.17, -0.13), anchor='top-right')
 
+        #self.die_icon = ui.Icon(self.hud, '', (0.0, -0.15), anchor='top-center')
+        self.die_icon = ui.Icon(self.hud, '', (-0.15, 0.1), anchor='bottom-right')
+        self.die_icon.path.set_color_scale(1, 1, 1, 1)
+
         self.setup()
 
     def delete_entity(self, ent):
@@ -102,6 +106,10 @@ class World(esper.World):
         new_value = self.move_counter.inc_value()
         if self.level.par is not None and new_value > self.level.par:
             self.move_counter.set_icon('', style='regular')
+
+        die = self.component_for_entity(self.player, components.Die)
+
+        self.die_icon.set(' '[die.die.bottom_number])
 
     def on_level_start(self):
         self.player_control.unlock()
@@ -164,13 +172,16 @@ class World(esper.World):
             print("Beat level {0} in {1} moves".format(self.level_name, num_moves))
         base.update_save_state(self.level_name, num_moves, star=star, par=self.level.par)
 
+        self.load_next_level()
+
+    def load_next_level(self):
         if not self.next_levels:
-            base.on_escape()
+            base.show_level_select()
             return
 
         level = self.next_levels.pop(0)
         if not level:
-            base.on_escape()
+            base.show_level_select()
             return
 
         self.load_level(level)

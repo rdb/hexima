@@ -2,6 +2,7 @@ import sys
 
 from direct.showbase.ShowBase import ShowBase
 from direct.filter.FilterManager import FilterManager
+from direct.interval.IntervalGlobal import LerpFunctionInterval
 from panda3d import core
 import pman.shim
 import json
@@ -105,13 +106,15 @@ class GameApp(ShowBase):
         self.blurred_tex = None
 
         screen = ui.Screen("select quality")
-        ui.Button(screen, 'sublime', pos=(0.0, 0.3), command=self.start_game, extraArgs=[3])
-        ui.Button(screen, 'mediocre', pos=(0.0, 0.1), command=self.start_game, extraArgs=[2])
-        ui.Button(screen, 'terrible', pos=(0.0, -0.1), command=self.start_game, extraArgs=[1])
+        ui.Button(screen, 'sublime', pos=(0.0, 0), command=self.start_game, extraArgs=[3])
+        ui.Button(screen, 'mediocre', pos=(0.0, -0.15), command=self.start_game, extraArgs=[2])
+        ui.Button(screen, 'terrible', pos=(0.0, -0.3), command=self.start_game, extraArgs=[1])
         self.quality_screen = screen
 
-        screen.focus()
+        screen.show_now()
         self.game_started = False
+        self.have_save = False
+        self.blurred = False
 
     def start_game(self, quality):
         if self.game_started:
@@ -193,16 +196,153 @@ class GameApp(ShowBase):
             panel.path.set_x(x)
             x += 0.4
 
-        self.back_button = ui.Button(screen, '     back', pos=(-0.2, -0.5), icon='', disabled=True, command=self.on_back)
+        ui.Button(screen, 'back', pos=(0, -0.5), command=self.show_main)
         self.level_select = screen
 
         self.load_save_state()
 
-        self.accept('escape', self.on_escape)
-
         self.task_mgr.add(self.process_world)
 
+        screen = ui.Screen("hexima")
+        if self.have_save:
+            self.new_game_button = ui.Button(screen, 'continue', pos=(0.0, -0.15*0), command=self.continue_game)
+        else:
+            self.new_game_button = ui.Button(screen, 'new game', pos=(0.0, -0.15*0), command=self.continue_game)
+        ui.Button(screen, 'select level', pos=(0.0, -0.15*1), command=self.show_level_select)
+        self.fullscreen_button = ui.Button(screen, 'fullscreen', pos=(0.0, -0.15*2), command=self.toggle_fullscreen)
+        ui.Button(screen, 'quit', pos=(0.0, -0.15*3), command=self.show_quit)
+        self.main_menu = screen
         screen.show()
+        self.current_screen = screen
+
+        self.quit_screen = ui.Screen("quit?")
+        ui.Button(self.quit_screen, 'yes, quit', pos=(0, -0.15*0), command=sys.exit)
+        ui.Button(self.quit_screen, 'no, stay', pos=(0, -0.15*1), command=self.show_main)
+
+        self.new_game_screen = ui.Screen("erase save?")
+        ui.Button(self.new_game_screen, 'yes, erase', pos=(0, -0.15*0), command=self.start_new_game)
+        ui.Button(self.new_game_screen, 'no, cancel', pos=(0, -0.15*1), command=self.show_main)
+
+        self.pause_screen = ui.Screen("paused")
+        ui.Button(self.pause_screen, 'continue', pos=(0, -0.15*0), command=self.continue_game)
+        ui.Button(self.pause_screen, 'restart level', pos=(0, -0.15*1), command=self.restart_level)
+        ui.Button(self.pause_screen, 'skip level', pos=(0, -0.15*2), command=self.skip_level)
+        ui.Button(self.pause_screen, 'main menu', pos=(0, -0.15*3), command=self.show_main)
+
+        self.accept('escape', self.show_quit)
+
+    def blur(self):
+        if self.blurred:
+            return
+
+        self.blurred = True
+        LerpFunctionInterval(lambda x: base.blur_scale.set_element(0, x), 0.5, fromData=0.0, toData=1.0).start()
+
+    def unblur(self):
+        if not self.blurred:
+            return
+        self.blurred = False
+        LerpFunctionInterval(lambda x: base.blur_scale.set_element(0, x), 0.5, fromData=1.0, toData=0.0).start()
+
+    def show_quit(self):
+        self.world.hud.hide()
+        self.current_screen.hide()
+        self.quit_screen.show()
+        self.current_screen = self.quit_screen
+        self.blur()
+        self.world.player_control.lock()
+        self.accept('escape', self.show_main)
+
+    def show_main(self):
+        self.world.hud.hide()
+        self.current_screen.hide()
+        self.main_menu.show()
+        self.current_screen = self.main_menu
+        self.blur()
+        self.world.player_control.lock()
+        self.accept('escape', self.show_quit)
+
+    def show_new_game(self):
+        self.world.hud.hide()
+        self.current_screen.hide()
+        self.new_game_screen.show()
+        self.current_screen = self.new_game_screen
+        self.blur()
+        self.world.player_control.lock()
+        self.accept('escape', self.show_main)
+
+    def show_level_select(self):
+        self.world.hud.hide()
+        self.current_screen.hide()
+        self.level_select.show()
+        self.current_screen = self.level_select
+        self.blur()
+        self.world.player_control.lock()
+        self.accept('escape', self.show_main)
+
+    def show_pause(self):
+        self.world.hud.hide()
+        self.current_screen.hide()
+        self.pause_screen.show()
+        self.current_screen = self.pause_screen
+        self.blur()
+        self.world.player_control.lock()
+        self.accept('escape', self.continue_game)
+
+    def start_new_game(self):
+        self.current_screen.hide()
+        self.unblur()
+        self.erase_save_state()
+        self.accept('escape', self.show_pause)
+
+        self.on_switch_level("one", 1)
+
+    def continue_game(self):
+        self.current_screen.hide()
+        self.unblur()
+        self.load_save_state()
+        self.accept('escape', self.show_pause)
+
+        if not self.world.level:
+            if self.next_level:
+                self.on_switch_level(*self.next_level)
+            else:
+                # We've already won, no level hasn't been gotten yet.
+                self.show_level_select()
+        else:
+            self.world.player_control.unlock()
+            self.world.hud.show()
+
+    def restart_level(self):
+        self.current_screen.hide()
+        self.unblur()
+        self.world.reload_level()
+        self.accept('escape', self.show_pause)
+
+    def skip_level(self):
+        self.current_screen.hide()
+        self.unblur()
+        self.world.load_next_level()
+        self.accept('escape', self.show_pause)
+
+    def erase_save_state(self):
+        self.have_save = False
+        fp = open('save.json', 'w')
+        fp.write('{}')
+        fp.close()
+        self.update_level_overview({})
+
+    def toggle_fullscreen(self):
+        if not self.win.get_properties().fullscreen:
+            print("Switching to fullscreen mode")
+            size = self.pipe.get_display_width(), self.pipe.get_display_height()
+            self.win.request_properties(core.WindowProperties(fullscreen=True, size=size))
+            self.fullscreen_button.set_text('windowed')
+        else:
+            print("Switching to windowed mode")
+            size = core.WindowProperties.get_default().size
+            self.win.request_properties(core.WindowProperties(fullscreen=False, size=size, origin=(-2, -2)))
+            self.fullscreen_button.set_text('fullscreen')
 
     def load_save_state(self):
         try:
@@ -249,8 +389,11 @@ class GameApp(ShowBase):
     def update_level_overview(self, data):
         level_states = data.get('levels', {})
 
+        self.have_save = (len(level_states) > 0)
+        next_level = None
+
         for pack_name, levels in level_packs:
-            for level in levels:
+            for li, level in enumerate(levels):
                 button = self.level_buttons.get(level, None)
                 if button:
                     state = level_states.get(level, {})
@@ -258,6 +401,10 @@ class GameApp(ShowBase):
                         button.set_badge('', style='solid', color=(1, 0.8, 0.3, 1))
                     elif state.get('best'):
                         button.set_badge('', style='solid', color=(0.2, 0.8, 0.1, 1))
+                    elif next_level is None:
+                        next_level = (pack_name, li)
+
+        self.next_level = next_level
 
     def setup_filters(self):
         self.filters = MyFilterManager(base.win, base.cam)
@@ -302,21 +449,6 @@ class GameApp(ShowBase):
         prev_tex = intermediate_tex
 
         self.blurred_tex = prev_tex
-
-    def on_escape(self):
-        self.world.hud.hide()
-        self.level_select.show()
-        self.back_button.enable()
-        self.world.player_control.lock()
-        self.accept('escape', self.on_back)
-
-    def on_back(self):
-        if self.world.level:
-            if self.world.move_counter.value > 0:
-                self.world.hud.show()
-            self.level_select.hide()
-            self.world.player_control.unlock()
-            self.accept('escape', self.on_escape)
 
     def on_switch_level(self, pack_name, li):
         pack = dict(level_packs)[pack_name]

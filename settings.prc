@@ -4,3 +4,6 @@ textures-power-2 none
 
 text-default-font assets/font/Quicksand-Regular.otf
 text-pixels-per-unit 64
+
+win-origin -2 -2
+win-size 1020 764

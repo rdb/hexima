@@ -83,6 +83,7 @@ class HUD:
     def __init__(self, anchor=None):
         self.anchors = {
             'top-left': base.a2dTopLeft.attach_new_node('hud-tl'),
+            'top-center': base.a2dTopCenter.attach_new_node('hud-tc'),
             'top-right': base.a2dTopRight.attach_new_node('hud-tr'),
             'bottom-left': base.a2dBottomLeft.attach_new_node('hud-bl'),
             'bottom-right': base.a2dBottomRight.attach_new_node('hud-br'),
@@ -147,6 +148,9 @@ class Button:
 
         parent._child_item_added(self.path)
 
+    def set_text(self, text):
+        self.path['text'] = text
+
     def focus(self):
         self.path.guiItem.set_focus(True)
 
@@ -169,6 +173,35 @@ class Button:
 
         self.path.colorScaleInterval(0.2, (1, 1, 1, 0.6), blendType='easeInOut').start()
         self.path.guiItem.set_state(0)
+
+
+class Icon:
+    def __init__(self, parent, icon='', pos=(0, 0), style='solid', anchor=None):
+        parent_path = parent.path if anchor is None else parent.anchors[anchor]
+        self.pos = pos
+
+        self.path = parent_path.attach_new_node('icon')
+        self.path.set_color_scale((1, 1, 1, 1))
+        self.path.set_pos(pos[0], 0, pos[1])
+
+        self.icon = None
+        if icon:
+            self.set(icon, style=style)
+
+    def set(self, icon, style='solid'):
+        old_icon = self.icon
+        if old_icon:
+            self.clear()
+        font = base.icon_fonts[style]
+        self.icon = OnscreenText(parent=self.path, text=icon, fg=(1, 1, 1, 1), font=font, align=core.TextNode.A_center, scale=0.12)
+
+    def clear(self):
+        old_icon = self.icon
+        if old_icon:
+            Sequence(
+                old_icon.colorScaleInterval(0.2, (1, 1, 1, 0)),
+                Func(old_icon.destroy),
+            ).start()
 
 
 class Indicator:
@@ -229,10 +262,13 @@ class Screen:
         cm = core.CardMaker("card")
         cm.set_frame_fullscreen_quad()
         card = render2d.attach_new_node(cm.generate())
-        card.set_color(core.LColor(base.win.clear_color.xyz, 0.5))
+        card.set_color(core.LColor(base.win.clear_color.xyz * 0.5, 0.5))
         card.set_transparency(1)
         card.set_bin('fixed', 40)
         self.fade_card = card
+
+        # Start hidden
+        self.hide_now()
 
         self._first_item = None
         self._prev_item = None
@@ -261,12 +297,14 @@ class Screen:
             self._first_item.guiItem.set_focus(True)
 
     def show(self):
+        if self.visible:
+            return
+        self.visible = True
         duration = 0.5
         Sequence(
             Func(self.blur_card.show),
             Func(self.fade_card.show),
             Parallel(
-                LerpFunctionInterval(lambda x: base.blur_scale.set_element(0, x), duration, fromData=0.0, toData=1.0),
                 LerpFunctionInterval(lambda x: self.blur_card.set_alpha_scale(x), duration, fromData=0.0, toData=1.0),
                 LerpFunctionInterval(lambda x: self.fade_card.set_alpha_scale(x), duration, fromData=0.0, toData=0.5),
             ),
@@ -275,10 +313,12 @@ class Screen:
         ).start()
 
     def hide(self):
+        if not self.visible:
+            return
+        self.visible = False
         duration = 0.5
         Sequence(
             Parallel(
-                LerpFunctionInterval(lambda x: base.blur_scale.set_element(0, x), duration, toData=0.0, fromData=1.0),
                 LerpFunctionInterval(lambda x: self.blur_card.set_alpha_scale(x), duration, toData=0.0, fromData=1.0),
                 LerpFunctionInterval(lambda x: self.fade_card.set_alpha_scale(x), duration, toData=0.0, fromData=0.5),
             ),
@@ -287,7 +327,19 @@ class Screen:
         ).start()
         self.path.hide()
 
+    def show_now(self):
+        self.fade_card.set_alpha_scale(1)
+        self.blur_card.set_alpha_scale(1)
+        self.blur_card.show()
+        self.fade_card.show()
+        self.path.show()
+        self.focus()
+        self.visible = True
+
     def hide_now(self):
+        self.fade_card.set_alpha_scale(0)
+        self.blur_card.set_alpha_scale(0)
         self.blur_card.hide()
         self.fade_card.hide()
         self.path.hide()
+        self.visible = False
