@@ -1,3 +1,2 @@
 panda3d>=1.10.2
 panda3d_pman
-esper
