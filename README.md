@@ -22,3 +22,13 @@ Open a terminal window, "cd" to the game directory and run:
 ```
 python run_game.py
 ```
+
+Acknowledgements
+----------------
+Coding by rdb, level design by xidram
+
+Music is made by [hendrik-jan](https://hendrik-jan.bandcamp.com/) for this game.
+
+Skybox is by Spiney, licensed under CC-BY 3.0
+
+Sound effects are from CC0 sources on OpenGameArt
