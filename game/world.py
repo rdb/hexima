@@ -206,11 +206,14 @@ class World(esper.World):
         self.player_control.lock()
         self.player_control.clear_state()
 
-        level_dir = os.path.join(os.path.dirname(__file__), '..', 'levels')
+        level_file = os.path.join(os.path.dirname(__file__), 'levels', name + '.lvl')
+        if not os.path.isfile(level_file):
+            level_file = os.path.join(os.path.dirname(__file__), '..', 'levels', name + '.lvl')
+
         level = Level()
 
         try:
-            level.read(os.path.join(level_dir, name + '.lvl'))
+            level.read(level_file)
         except IOError as ex:
             print("Failed to load level {0}: {1}".format(name, ex))
             return

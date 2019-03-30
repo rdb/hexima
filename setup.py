@@ -24,6 +24,12 @@ setup(
             'include_patterns': {
                 'game/**',
                 '.pman',
+                'settings.prc',
+                'levels/*.lvl',
+            },
+            'exclude_patterns': {
+                '*.py',
+                '**/*.py',
             },
             'rename_paths': {
                 'game/': './',
