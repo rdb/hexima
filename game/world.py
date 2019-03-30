@@ -39,7 +39,7 @@ class World(esper.World):
 
         # Create camera entity
         camera = self.create_entity()
-        self.add_component(camera, components.Camera(base.camera, fov=90, pos=(0, -6.7, 0), look_at=(0, 0, 0)))
+        self.add_component(camera, components.Camera(base.camera, fov=90, pos=(0, -8, 0), look_at=(0, 0, 0)))
         self.add_component(camera, components.Spatial(parent=self.root, hpr=(-26.5651, -48.1897, 0)))#153.435, 48.1897, 0))) #
         self.add_component(camera, components.Compass(player, 'xy'))
 
