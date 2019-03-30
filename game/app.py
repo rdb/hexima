@@ -5,7 +5,6 @@ from direct.filter.FilterManager import FilterManager
 import direct.gui.DirectGuiGlobals as DGG
 from direct.interval.IntervalGlobal import Sequence, Func, LerpFunctionInterval
 from panda3d import core
-import pman.shim
 import json
 
 from .world import World
@@ -70,9 +69,6 @@ class GameApp(ShowBase):
             gsg.has_extension("GL_ARB_compatibility")
 
         print("OpenGL version: {0}.{1} ({2})".format(*gl_version, 'compat' if self.has_fixed_function else 'core'))
-
-        # Initialize panda3d-pman
-        pman.shim.init(self)
 
         self.accept('escape', sys.exit)
         self.accept('f12', self.screenshot)
