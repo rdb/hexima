@@ -262,7 +262,7 @@ class Screen:
         cm = core.CardMaker("card")
         cm.set_frame_fullscreen_quad()
         card = render2d.attach_new_node(cm.generate())
-        card.set_color(core.LColor(base.win.clear_color.xyz * 0.5, 0.5))
+        card.set_color(core.LColor(base.win.clear_color.xyz * 0.35, 0.5))
         card.set_transparency(1)
         card.set_bin('fixed', 40)
         self.fade_card = card

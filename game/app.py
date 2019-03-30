@@ -106,21 +106,21 @@ class GameApp(ShowBase):
         self.blurred_tex = None
 
         screen = ui.Screen("select quality")
-        ui.Button(screen, 'sublime', pos=(0.0, 0), command=self.start_game, extraArgs=[3])
-        ui.Button(screen, 'mediocre', pos=(0.0, -0.15), command=self.start_game, extraArgs=[2])
-        ui.Button(screen, 'terrible', pos=(0.0, -0.3), command=self.start_game, extraArgs=[1])
+        ui.Button(screen, 'sublime', pos=(0.0, 0), command=self.setup_game, extraArgs=[3])
+        ui.Button(screen, 'mediocre', pos=(0.0, -0.15), command=self.setup_game, extraArgs=[2])
+        ui.Button(screen, 'terrible', pos=(0.0, -0.3), command=self.setup_game, extraArgs=[1])
         self.quality_screen = screen
 
         screen.show_now()
-        self.game_started = False
+        self.game_setup = False
         self.have_save = False
         self.blurred = False
 
-    def start_game(self, quality):
-        if self.game_started:
+    def setup_game(self, quality):
+        if self.game_setup:
             return
 
-        self.game_started = True
+        self.game_setup = True
 
         self.quality_screen.hide_now()
         self.quality = quality
@@ -185,8 +185,8 @@ class GameApp(ShowBase):
             for l, r in (1, 2), (3, 4), (5, 6):
                 level_l = levels[l-1]
                 level_r = levels[r-1]
-                btn_l = ui.LevelButton(panel, l, (-0.05, y), command=self.on_switch_level, extraArgs=[pack_name, l-1], locked=not level_l)
-                btn_r = ui.LevelButton(panel, r, (0.05, y), command=self.on_switch_level, extraArgs=[pack_name, r-1], locked=not level_r)
+                btn_l = ui.LevelButton(panel, l, (-0.05, y), command=self.start_game, extraArgs=[pack_name, l-1], locked=not level_l)
+                btn_r = ui.LevelButton(panel, r, (0.05, y), command=self.start_game, extraArgs=[pack_name, r-1], locked=not level_r)
                 if level_l:
                     self.level_buttons[level_l] = btn_l
                 if level_r:
@@ -199,28 +199,26 @@ class GameApp(ShowBase):
         ui.Button(screen, 'back', pos=(0, -0.5), command=self.show_main)
         self.level_select = screen
 
-        self.load_save_state()
-
-        self.task_mgr.add(self.process_world)
-
         screen = ui.Screen("hexima")
-        if self.have_save:
-            self.new_game_button = ui.Button(screen, 'continue', pos=(0.0, -0.15*0), command=self.continue_game)
-        else:
-            self.new_game_button = ui.Button(screen, 'new game', pos=(0.0, -0.15*0), command=self.continue_game)
+        self.continue_button = ui.Button(screen, '???', pos=(0.0, -0.15*0), command=self.continue_game)
         ui.Button(screen, 'select level', pos=(0.0, -0.15*1), command=self.show_level_select)
         self.fullscreen_button = ui.Button(screen, 'fullscreen', pos=(0.0, -0.15*2), command=self.toggle_fullscreen)
         ui.Button(screen, 'quit', pos=(0.0, -0.15*3), command=self.show_quit)
+
+        self.load_save_state()
+
         self.main_menu = screen
         screen.show()
         self.current_screen = screen
+
+        self.task_mgr.add(self.process_world)
 
         self.quit_screen = ui.Screen("quit?")
         ui.Button(self.quit_screen, 'yes, quit', pos=(0, -0.15*0), command=sys.exit)
         ui.Button(self.quit_screen, 'no, stay', pos=(0, -0.15*1), command=self.show_main)
 
         self.new_game_screen = ui.Screen("erase save?")
-        ui.Button(self.new_game_screen, 'yes, erase', pos=(0, -0.15*0), command=self.start_new_game)
+        ui.Button(self.new_game_screen, 'yes, erase', pos=(0, -0.15*0), command=self.start_game)
         ui.Button(self.new_game_screen, 'no, cancel', pos=(0, -0.15*1), command=self.show_main)
 
         self.pause_screen = ui.Screen("paused")
@@ -290,26 +288,38 @@ class GameApp(ShowBase):
         self.accept('escape', self.continue_game)
 
     def start_new_game(self):
+        self.erase_save_state()
+        self.start_game("one", 1)
+
+    def start_game(self, pack_name, li):
         self.current_screen.hide()
         self.unblur()
-        self.erase_save_state()
         self.accept('escape', self.show_pause)
 
-        self.on_switch_level("one", 1)
+        pack = dict(level_packs)[pack_name]
+        if li >= len(pack):
+            return
+
+        level = pack[li]
+        if not level:
+            return
+
+        self.world.load_level(level)
+        self.world.next_levels = pack[li + 1:]
 
     def continue_game(self):
-        self.current_screen.hide()
-        self.unblur()
-        self.load_save_state()
-        self.accept('escape', self.show_pause)
-
         if not self.world.level:
             if self.next_level:
-                self.on_switch_level(*self.next_level)
+                self.start_game(*self.next_level)
             else:
                 # We've already won, no level hasn't been gotten yet.
                 self.show_level_select()
         else:
+            self.current_screen.hide()
+            self.unblur()
+            self.load_save_state()
+            self.accept('escape', self.show_pause)
+
             self.world.player_control.unlock()
             self.world.hud.show()
 
@@ -326,6 +336,7 @@ class GameApp(ShowBase):
         self.accept('escape', self.show_pause)
 
     def erase_save_state(self):
+        print("Erasing save state")
         self.have_save = False
         fp = open('save.json', 'w')
         fp.write('{}')
@@ -390,6 +401,10 @@ class GameApp(ShowBase):
         level_states = data.get('levels', {})
 
         self.have_save = (len(level_states) > 0)
+        if self.have_save:
+            self.continue_button.set_text('continue')
+        else:
+            self.continue_button.set_text('new game')
         next_level = None
 
         for pack_name, levels in level_packs:
@@ -409,6 +424,8 @@ class GameApp(ShowBase):
     def setup_filters(self):
         self.filters = MyFilterManager(base.win, base.cam)
         self.scene_tex = core.Texture()
+        self.scene_tex.set_wrap_u(core.Texture.WM_clamp)
+        self.scene_tex.set_wrap_v(core.Texture.WM_clamp)
         self.quad = self.filters.render_scene_into(colortex=self.scene_tex)
         self.quad.clear_color()
 
@@ -421,6 +438,8 @@ class GameApp(ShowBase):
             intermediate_tex = core.Texture()
             intermediate_tex.set_minfilter(core.Texture.FT_linear)
             intermediate_tex.set_magfilter(core.Texture.FT_linear)
+            intermediate_tex.set_wrap_u(core.Texture.WM_clamp)
+            intermediate_tex.set_wrap_v(core.Texture.WM_clamp)
             intermediate_quad = self.filters.render_quad_into("blur-x", colortex=intermediate_tex)
             intermediate_quad.set_shader_input("image", prev_tex)
             intermediate_quad.set_shader_input("direction", (2, 0))
@@ -431,6 +450,8 @@ class GameApp(ShowBase):
             intermediate_tex = core.Texture()
             intermediate_tex.set_minfilter(core.Texture.FT_linear)
             intermediate_tex.set_magfilter(core.Texture.FT_linear)
+            intermediate_tex.set_wrap_u(core.Texture.WM_clamp)
+            intermediate_tex.set_wrap_v(core.Texture.WM_clamp)
             intermediate_quad = self.filters.render_quad_into("blur-y", colortex=intermediate_tex)
             intermediate_quad.set_shader_input("image", prev_tex)
             intermediate_quad.set_shader_input("direction", (0, 2))
@@ -441,6 +462,8 @@ class GameApp(ShowBase):
         intermediate_tex = core.Texture()
         intermediate_tex.set_minfilter(core.Texture.FT_linear)
         intermediate_tex.set_magfilter(core.Texture.FT_linear)
+        intermediate_tex.set_wrap_u(core.Texture.WM_clamp)
+        intermediate_tex.set_wrap_v(core.Texture.WM_clamp)
         intermediate_quad = self.filters.render_quad_into("blur-y", colortex=intermediate_tex)
         intermediate_quad.set_shader_input("image", prev_tex)
         intermediate_quad.set_shader_input("direction", (0, 4))
@@ -449,19 +472,6 @@ class GameApp(ShowBase):
         prev_tex = intermediate_tex
 
         self.blurred_tex = prev_tex
-
-    def on_switch_level(self, pack_name, li):
-        pack = dict(level_packs)[pack_name]
-        if li >= len(pack):
-            return
-
-        level = pack[li]
-        if not level:
-            return
-
-        self.world.load_level(level)
-        self.world.next_levels = pack[li + 1:]
-        self.level_select.hide()
 
     def __del__(self):
         core.unload_prc_file(self.settings)
