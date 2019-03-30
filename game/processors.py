@@ -156,6 +156,9 @@ class PlayerControl(esper.Processor, DirectObject):
         ]
         sequence = []
 
+        if type == TileType.ice and base.slide_sound:
+            sequence.append(Func(base.slide_sound.play))
+
         while type == TileType.ice:
             target_pos.xy += vector
             x, y = int(target_pos[0]), int(target_pos[1])
@@ -212,6 +215,8 @@ class PlayerControl(esper.Processor, DirectObject):
 
         if self.cracked_tile:
             # Break away the cracked tile
+            if base.collapse_sound:
+                base.collapse_sound.play()
             self.world.add_component(self.cracked_tile, components.Falling(drag=5.0))
             self.cracked_tile = None
 
@@ -223,6 +228,7 @@ class PlayerControl(esper.Processor, DirectObject):
             self.cracked_tile = self.world.tiles[(x, y)]
             self.world.level.remove_tile(x, y)
             del self.world.tiles[(x, y)]
+            sequence.append(Func(base.crack_sound.play))
 
         if type == TileType.button:
             button_tile = self.world.tiles[(x, y)]

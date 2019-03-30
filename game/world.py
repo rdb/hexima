@@ -196,6 +196,8 @@ class World(esper.World):
         if self.player_control.locked:
             pass
 
+        if base.restart_sound:
+            base.restart_sound.play()
         self.load_level(self.level_name)
 
     def load_level(self, name):

@@ -109,10 +109,13 @@ class GameApp(ShowBase):
         self.endtile_sound = loader.load_sfx('sfx/endtile.wav')
         self.move_sound = loader.load_sfx('sfx/die-move.wav')
         self.impassable_sound = loader.load_sfx('sfx/impassable.wav')
-        self.button_sound = loader.load_sfx('sfx/button-press.ogg')
+        self.button_sound = loader.load_sfx('sfx/button-press.wav')
         self.transport_sound = loader.load_sfx('sfx/transport-engage.wav')
         self.slide_sound = loader.load_sfx('sfx/ice-slide.wav')
         self.wind_sound = loader.load_sfx('sfx/wind.ogg')
+        self.crack_sound = loader.load_sfx('sfx/tile-crack.wav')
+        self.collapse_sound = loader.load_sfx('sfx/tile-collapse.wav')
+        self.restart_sound = loader.load_sfx('sfx/menu-interact.wav')
 
         self.music = {
             'menu': loader.load_music('music/theme.ogg'),
