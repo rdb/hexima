@@ -1,6 +1,6 @@
 <CoordinateSystem> { Z-up }
 <Texture> bluecloud_bk {
-  "../sky/blurred_bk.jpg"
+  "assets/sky/blurred_bk.jpg"
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
   <Scalar> magfilter { LINEAR }
@@ -8,7 +8,7 @@
 }
 
 <Texture> bluecloud_lf {
-  "../sky/blurred_lf.jpg"
+  "assets/sky/blurred_lf.jpg"
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
   <Scalar> magfilter { LINEAR }
@@ -16,7 +16,7 @@
 }
 
 <Texture> bluecloud_dn {
-  "../sky/blurred_dn.jpg"
+  "assets/sky/blurred_dn.jpg"
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
   <Scalar> magfilter { LINEAR }
@@ -24,7 +24,7 @@
 }
 
 <Texture> bluecloud_up {
-  "../sky/blurred_up.jpg"
+  "assets/sky/blurred_up.jpg"
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
   <Scalar> magfilter { LINEAR }
@@ -32,7 +32,7 @@
 }
 
 <Texture> bluecloud_rt {
-  "../sky/blurred_rt.jpg"
+  "assets/sky/blurred_rt.jpg"
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
   <Scalar> magfilter { LINEAR }
@@ -40,7 +40,7 @@
 }
 
 <Texture> bluecloud_ft {
-  "../sky/blurred_ft.jpg"
+  "assets/sky/blurred_ft.jpg"
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
   <Scalar> magfilter { LINEAR }
