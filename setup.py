@@ -38,6 +38,8 @@ setup(
             'gui_apps': {
                 APP_NAME: CONFIG['run']['main_file'],
             },
+            'log_filename': '$USER_APPDATA/hexima/output.log',
+            'log_append': False,
             'plugins': [
                 'pandagl',
                 'p3openal_audio',
