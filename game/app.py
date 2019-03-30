@@ -105,6 +105,7 @@ class GameApp(ShowBase):
 
         self.blurred_tex = None
 
+        self.quality = None
         screen = ui.Screen("select quality")
         ui.Button(screen, 'sublime', pos=(0.0, 0), command=self.setup_game, extraArgs=[3])
         ui.Button(screen, 'mediocre', pos=(0.0, -0.15), command=self.setup_game, extraArgs=[2])
