@@ -2,8 +2,10 @@ framebuffer-srgb true
 gl-version 3 2
 textures-power-2 none
 
-model-path game/assets
-model-path assets
+audio-library-name p3openal_audio
+
+model-path $THIS_PRC_DIR/game/assets
+model-path $THIS_PRC_DIR/assets
 
 text-default-font assets/font/Quicksand-Regular.otf
 text-pixels-per-unit 64

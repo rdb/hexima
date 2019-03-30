@@ -43,6 +43,7 @@ setup(
             'plugins': [
                 'pandagl',
                 'p3openal_audio',
+                'p3fmod_audio',
             ],
         },
     }
