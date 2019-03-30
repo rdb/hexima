@@ -80,18 +80,7 @@ class GameApp(ShowBase):
 
         # Load in background
         self.set_background_color((0.31, 0.42, 0.53))
-        sky = loader.load_model("gfx/sky.bam")
-        sky.reparent_to(self.camera)
-        sky.set_scale(10)
-        sky.set_bin('background', 0)
-        sky.set_depth_write(False)
-        sky.set_depth_test(False)
-        sky.set_shader_off(1)
-        sky.set_compass()
-        if self.win.get_fb_properties().srgb_color:
-            for tex in sky.find_all_textures():
-                tex.set_format(core.Texture.F_srgb)
-        else:
+        if not self.win.get_fb_properties().srgb_color:
             print("Did not get an sRGB framebuffer.  The game may appear too dark.")
 
         self.symbol_font = loader.load_font("font/FreeSerif.otf")
@@ -160,6 +149,20 @@ class GameApp(ShowBase):
             self.lighting_shader = core.Shader.load(core.Shader.SL_GLSL, 'assets/shader/lighting.vert', 'assets/shader/lighting.frag')
         else:
             self.lighting_shader = None
+
+        if quality >= 2:
+            # Load skybox
+            sky = loader.load_model("gfx/sky.bam")
+            sky.reparent_to(self.camera)
+            sky.set_scale(10)
+            sky.set_bin('background', 0)
+            sky.set_depth_write(False)
+            sky.set_depth_test(False)
+            sky.set_shader_off(1)
+            sky.set_compass()
+            if self.win.get_fb_properties().srgb_color:
+                for tex in sky.find_all_textures():
+                    tex.set_format(core.Texture.F_srgb)
 
         self.world = World()
         self.world.root.reparent_to(self.render)
