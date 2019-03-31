@@ -1,6 +1,6 @@
 #pragma once
 
-uniform struct {
+uniform struct p3d_LightSourceParameters {
   vec4 position;
   vec3 color;
   vec3 attenuation;

@@ -8,7 +8,7 @@ APP_NAME = CONFIG['general']['name']
 
 setup(
     name=APP_NAME,
-    version='1.0.1',
+    version='1.0.2',
     setup_requires=[
         'pytest-runner',
     ],
