@@ -34,7 +34,8 @@ void main() {
   float alpha = p3d_Material.roughness * p3d_Material.roughness;
   vec3 N = norm;
 
-  for (int i = 0; i < p3d_LightSource.length(); ++i) {
+  //for (int i = 0; i < p3d_LightSource.length(); ++i) {
+#define i 0
     vec3 diff = p3d_LightSource[i].position.xyz - vpos * p3d_LightSource[i].position.w;
     vec3 L = normalize(diff);
     vec3 V = normalize(-vpos);
@@ -71,7 +72,7 @@ void main() {
     color *= (textureProj(p3d_LightSource[i].shadowMap, shad[i]) * NdotL) * 0.9 + 0.1;
 
     p3d_FragColor.rgb += color;
-  }
+  //}
 
   vec4 texcol = texture(p3d_Texture0, uv) + p3d_TexAlphaOnly;
   p3d_FragColor.rgb *= texcol.rgb;

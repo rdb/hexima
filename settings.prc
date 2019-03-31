@@ -10,5 +10,6 @@ model-path $THIS_PRC_DIR/assets
 text-default-font assets/font/Quicksand-Regular.otf
 text-pixels-per-unit 64
 
+window-title hexima
 win-origin -2 -2
 win-size 1020 764

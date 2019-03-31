@@ -157,6 +157,7 @@ class GameApp(ShowBase):
 
         if device.device_class != core.InputDevice.DeviceClass.gamepad:
             print("Ignoring non-gamepad device {0}".format(device))
+            return
 
         print("Connected gamepad device {0}".format(device))
         self.gamepads.add(device)
@@ -183,7 +184,6 @@ class GameApp(ShowBase):
 
         if quality >= 3:
             MyFilterManager.multisamples = 16
-            self.render.set_antialias(core.AntialiasAttrib.M_multisample)
 
             # Increase the quality of all the fonts.
             self.symbol_font.clear()
@@ -531,10 +531,19 @@ class GameApp(ShowBase):
         self.scene_tex.set_wrap_u(core.Texture.WM_clamp)
         self.scene_tex.set_wrap_v(core.Texture.WM_clamp)
         self.quad = self.filters.render_scene_into(colortex=self.scene_tex)
-        self.quad.clear_color()
 
-        if not self.quad:
-            return
+        if not self.quad and self.filters.multisamples:
+            # Try without multisampling.
+            self.filters.multisamples = None
+            self.quad = self.filters.render_scene_into(colortex=self.scene_tex)
+            if not self.quad:
+                return
+
+        if self.filters.multisamples:
+            self.filters.multisamples = None
+            self.render.set_antialias(core.AntialiasAttrib.M_multisample)
+
+        self.quad.clear_color()
 
         prev_tex = self.scene_tex
 
