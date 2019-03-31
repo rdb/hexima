@@ -25,6 +25,10 @@ Open a terminal window, "cd" to the game directory and run:
 python run_game.py
 ```
 
+The game is intended to be controlled using the arrow keys.  It can also be operated using a gamepad with a directional pad.
+
+The mouse can optionally be used to change the camera angle, which can be useful for looking at the other side of the die.
+
 Acknowledgements
 ----------------
 Coding by rdb, level design by xidram
