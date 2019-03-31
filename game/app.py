@@ -418,7 +418,7 @@ class GameApp(ShowBase):
     def erase_save_state(self):
         print("Erasing save state")
         self.have_save = False
-        fp = open('save.json', 'w')
+        fp = open(self._get_save_path(), 'w')
         fp.write('{}')
         fp.close()
         self.update_level_overview({})
@@ -447,12 +447,20 @@ class GameApp(ShowBase):
             self.ensure_music('menu')
             self.music_button.set_text('music: on')
 
+    def _get_save_path(self):
+        if not __file__.endswith('.py'):
+            save_file = core.Filename(core.Filename.get_user_appdata_directory(), 'hexima/save.json')
+            save_file.make_dir()
+            return save_file.to_os_specific()
+        else:
+            return os.path.join(self.mainDir, 'save.json')
+
     def _load_save_data(self):
-        save_file = os.path.join(self.mainDir, 'save.json')
+        save_file = self._get_save_path()
         if os.path.exists(save_file):
             print("Loading saves from {0}".format(save_file))
             try:
-                data = json.load(open('save.json', 'r'))
+                data = json.load(open(save_file, 'r'))
             except Exception as ex:
                 print("Failed to load saves: {0}".format(ex))
                 data = {}
@@ -496,8 +504,9 @@ class GameApp(ShowBase):
 
         self.update_level_overview(data)
 
+        save_file = self._get_save_path()
         try:
-            json.dump(data, open('save.json', 'w'), indent=4, sort_keys=True)
+            json.dump(data, open(save_file, 'w'), indent=4, sort_keys=True)
         except Exception as ex:
             print("Failed to write saves: {0}".format(ex))
 
