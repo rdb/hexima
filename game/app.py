@@ -3,7 +3,7 @@ import sys
 from direct.showbase.ShowBase import ShowBase
 from direct.filter.FilterManager import FilterManager
 import direct.gui.DirectGuiGlobals as DGG
-from direct.interval.IntervalGlobal import Sequence, Func, LerpFunctionInterval
+from direct.interval.IntervalGlobal import Sequence, Func, LerpFunctionInterval, Wait
 from panda3d import core
 import json
 import os
@@ -265,8 +265,7 @@ class GameApp(ShowBase):
         self.load_save_state()
 
         self.main_menu = screen
-        screen.show()
-        self.current_screen = screen
+        self.current_screen = None
 
         self.task_mgr.add(self.process_world)
 
@@ -284,8 +283,7 @@ class GameApp(ShowBase):
         ui.Button(self.pause_screen, 'skip level', pos=(0, -0.15*2), command=self.skip_level)
         ui.Button(self.pause_screen, 'main menu', pos=(0, -0.15*3), command=self.show_main)
 
-        self.accept_back(self.show_quit)
-
+        self.switch_screen(self.main_menu, back=self.show_quit)
         self.ensure_music('menu')
 
     def ensure_music(self, song):
@@ -340,60 +338,48 @@ class GameApp(ShowBase):
         self.accept('back', func)
         self.accept('start', func)
 
+    def switch_screen(self, screen, back=None):
+        self.ignore('escape')
+        self.ignore('back')
+        self.ignore('accept')
+        if self.current_screen and self.current_screen != screen:
+            self.current_screen.hide()
+            self.current_screen = None
+
+        if screen is None:
+            self.unblur()
+        else:
+            self.world.hud.hide()
+            screen.show()
+            self.current_screen = screen
+            self.blur()
+            self.world.player_control.lock()
+
+        if back is not None:
+            Sequence(Wait(0.5), Func(self.accept_back, back)).start()
+
     def show_quit(self):
-        self.world.hud.hide()
-        self.current_screen.hide()
-        self.quit_screen.show()
-        self.current_screen = self.quit_screen
-        self.blur()
-        self.world.player_control.lock()
-        self.accept_back(self.show_main)
+        self.switch_screen(self.quit_screen, back=self.show_main)
 
     def show_main(self):
-        self.world.hud.hide()
-        self.current_screen.hide()
-        self.main_menu.show()
-        self.current_screen = self.main_menu
-        self.blur()
-        self.world.player_control.lock()
-        self.accept_back(self.show_quit)
+        self.switch_screen(self.main_menu, back=self.show_quit)
         self.ensure_music('menu')
 
     def show_new_game(self):
-        self.world.hud.hide()
-        self.current_screen.hide()
-        self.new_game_screen.show()
-        self.current_screen = self.new_game_screen
-        self.blur()
-        self.world.player_control.lock()
-        self.accept_back(self.show_main)
+        self.switch_screen(self.new_game_screen, back=self.show_main)
 
     def show_level_select(self):
-        self.world.hud.hide()
-        self.current_screen.hide()
-        self.level_select.show()
-        self.current_screen = self.level_select
-        self.blur()
-        self.world.player_control.lock()
-        self.accept_back(self.show_main)
+        self.switch_screen(self.level_select, back=self.show_main)
 
     def show_pause(self):
-        self.world.hud.hide()
-        self.current_screen.hide()
-        self.pause_screen.show()
-        self.current_screen = self.pause_screen
-        self.blur()
-        self.world.player_control.lock()
-        self.accept_back(self.continue_game)
+        self.switch_screen(self.pause_screen, back=self.continue_game)
 
     def start_new_game(self):
         self.erase_save_state()
         self.start_game("one", 1)
 
     def start_game(self, pack_name, li):
-        self.current_screen.hide()
-        self.unblur()
-        self.accept_back(self.show_pause)
+        self.switch_screen(None, back=self.show_pause)
 
         pack = dict(level_packs)[pack_name]
         if li >= len(pack):
@@ -415,25 +401,19 @@ class GameApp(ShowBase):
                 # We've already won, no level hasn't been gotten yet.
                 self.show_level_select()
         else:
-            self.current_screen.hide()
-            self.unblur()
+            self.switch_screen(None, back=self.show_pause)
             self.load_save_state()
-            self.accept_back(self.show_pause)
 
             self.world.player_control.unlock()
             self.world.hud.show()
 
     def restart_level(self):
-        self.current_screen.hide()
-        self.unblur()
+        self.switch_screen(None, back=self.show_pause)
         self.world.reload_level()
-        self.accept_back(self.show_pause)
 
     def skip_level(self):
-        self.current_screen.hide()
-        self.unblur()
+        self.switch_screen(None, back=self.show_pause)
         self.world.load_next_level()
-        self.accept_back(self.show_pause)
 
     def erase_save_state(self):
         print("Erasing save state")

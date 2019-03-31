@@ -112,7 +112,8 @@ class World(esper.World):
         self.die_icon.set(' '[die.die.bottom_number])
 
     def on_level_start(self):
-        self.player_control.unlock()
+        if not base.blurred:
+            self.player_control.unlock()
 
         spatial = self.component_for_entity(self.player, components.Spatial)
         die = self.component_for_entity(self.player, components.Die)
