@@ -56,6 +56,8 @@ o  Button (toggles state of / and \ tiles)
 
 The first line is prefixed with `#` and should indicate the minimum number of moves needed to complete the level (in other words, the maximum moves you can make to "star" the level).
 
+Sorry about the confusing level naming; the numbering is out of order.  See `game/packs.py` to see how they are ordered into the various packs.
+
 Acknowledgements
 ----------------
 Coding by rdb, level design by xidram
