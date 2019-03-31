@@ -210,6 +210,8 @@ class World(esper.World):
         level_file = os.path.join(os.path.dirname(__file__), 'levels', name + '.lvl')
         if not os.path.isfile(level_file):
             level_file = os.path.join(os.path.dirname(__file__), '..', 'levels', name + '.lvl')
+        if not os.path.isfile(level_file):
+            level_file = os.path.join(base.mainDir, 'levels', name + '.lvl')
 
         level = Level()
 
