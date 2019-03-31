@@ -5,6 +5,8 @@ This is an entry in [PyWeek 27](https://pyweek.org/27/), with the theme "6".
 
 [Click here to go to the PyWeek entry page.](https://pyweek.org/e/superleuk27/)
 
+![Screenshot](https://pyweek.org/media/dl/27/superleuk27/screenshot-Sun-Mar-31-01-20-02-2019-1489.jpg)
+
 Dependencies
 ------------
 
