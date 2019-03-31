@@ -27,6 +27,7 @@ setup(
                 '.pman',
                 'settings.prc',
                 'levels/*.lvl',
+                'README.md',
             },
             'exclude_patterns': {
                 '*.py',
