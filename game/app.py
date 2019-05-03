@@ -134,9 +134,7 @@ class GameApp(ShowBase):
 
         print("Connected gamepad device {0}".format(device))
         self.gamepads.add(device)
-        self.attach_input_device(device, prefix='gamepad-')
-
-        self._ShowBase__inputDeviceNodes[device].node().add_child(self.mouseWatcherNode)
+        self.attach_input_device(device, gui=True)
 
     def on_disconnect_device(self, device):
         if device not in self.gamepads:
