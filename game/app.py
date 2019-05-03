@@ -13,36 +13,6 @@ from .packs import level_packs
 from . import ui
 
 
-class MyFilterManager(FilterManager):
-    multisamples = None
-
-    def createBuffer(self, name, xsize, ysize, texgroup, depthbits=1):
-        winprops = core.WindowProperties(size=(xsize, ysize))
-        props = core.FrameBufferProperties(core.FrameBufferProperties.get_default())
-        props.back_buffers = 0
-        props.rgb_color = 1
-        props.depth_bits = depthbits
-
-        if self.multisamples:
-            props.multisamples = self.multisamples
-
-        depthtex, colortex, auxtex0, auxtex1 = texgroup
-        buffer = base.graphics_engine.make_output(
-            self.win.getPipe(), name, -1,
-            props, winprops, core.GraphicsPipe.BF_refuse_window | core.GraphicsPipe.BF_resizeable,
-            self.win.getGsg(), self.win)
-        if buffer is None:
-            return buffer
-        if depthtex:
-            buffer.add_render_texture(depthtex, core.GraphicsOutput.RTM_bind_or_copy, core.GraphicsOutput.RTP_depth)
-        if colortex:
-            buffer.add_render_texture(colortex, core.GraphicsOutput.RTM_bind_or_copy, core.GraphicsOutput.RTP_color)
-        buffer.set_sort(self.nextsort)
-        buffer.disable_clears()
-        self.nextsort += 1
-        return buffer
-
-
 class GameApp(ShowBase):
     def __init__(self):
         self.settings = core.load_prc_file(core.Filename.expand_from("$MAIN_DIR/settings.prc"))
@@ -186,8 +156,6 @@ class GameApp(ShowBase):
         self.quality = quality
 
         if quality >= 3:
-            MyFilterManager.multisamples = 16
-
             # Increase the quality of all the fonts.
             self.symbol_font.clear()
             self.symbol_font.set_pixels_per_unit(128)
@@ -550,21 +518,24 @@ class GameApp(ShowBase):
         self.next_level = next_level
 
     def setup_filters(self):
-        self.filters = MyFilterManager(base.win, base.cam)
+        fbprops = core.FrameBufferProperties()
+        if self.quality >= 3:
+            fbprops.multisamples = 16
+
+        self.filters = FilterManager(base.win, base.cam)
         self.scene_tex = core.Texture()
         self.scene_tex.set_wrap_u(core.Texture.WM_clamp)
         self.scene_tex.set_wrap_v(core.Texture.WM_clamp)
-        self.quad = self.filters.render_scene_into(colortex=self.scene_tex)
+        self.quad = self.filters.render_scene_into(colortex=self.scene_tex, fbprops=fbprops)
 
-        if not self.quad and self.filters.multisamples:
+        if not self.quad and fbprops.multisamples:
             # Try without multisampling.
-            self.filters.multisamples = None
+            fbprops.multisamples = None
             self.quad = self.filters.render_scene_into(colortex=self.scene_tex)
             if not self.quad:
                 return
 
-        if self.filters.multisamples:
-            self.filters.multisamples = None
+        if fbprops.multisamples:
             self.render.set_antialias(core.AntialiasAttrib.M_multisample)
 
         self.quad.clear_color()
