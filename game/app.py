@@ -66,8 +66,7 @@ class GameApp(ShowBase):
 
         gsg = self.win.gsg
         gl_version = (gsg.driver_version_major, gsg.driver_version_minor)
-        self.has_fixed_function = gl_version < (3, 2) or \
-            gsg.has_extension("GL_ARB_compatibility")
+        self.has_fixed_function = gl_version < (3, 0) or gsg.max_lights > 0
 
         print("OpenGL version: {0}.{1} ({2})".format(*gl_version, 'compat' if self.has_fixed_function else 'core'))
 
