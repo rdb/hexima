@@ -69,6 +69,7 @@ class GameApp(ShowBase):
         self.has_fixed_function = gl_version < (3, 0) or gsg.max_lights > 0
 
         print("OpenGL version: {0}.{1} ({2})".format(*gl_version, 'compat' if self.has_fixed_function else 'core'))
+        print("OpenGL renderer: {0}".format(gsg.driver_renderer))
 
         self.accept('escape', sys.exit)
         self.accept('f12', self.screenshot)
@@ -149,6 +150,9 @@ class GameApp(ShowBase):
         dev_mgr = core.InputDeviceManager.get_global_ptr()
         for device in dev_mgr.get_devices(core.InputDevice.DeviceClass.gamepad):
             self.on_connect_device(device)
+
+        sys.stdout.flush()
+        sys.stderr.flush()
 
     def on_connect_device(self, device):
         if device in self.gamepads:
