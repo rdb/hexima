@@ -269,7 +269,13 @@ class GameApp(ShowBase):
             on_text='music: on',
             pos=(0.0, -0.15*3),
             command=self.toggle_music)
-        ui.Button(screen, 'quit', pos=(0.0, -0.15*4), command=self.show_quit)
+        ui.ToggleButton(screen,
+            state=True,
+            off_text='sound: off',
+            on_text='sound: on',
+            pos=(0.0, -0.15*4),
+            command=self.enable_sound_effects)
+        ui.Button(screen, 'quit', pos=(0.0, -0.15*5), command=self.show_quit)
 
         self.load_save_state()
 
