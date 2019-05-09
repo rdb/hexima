@@ -175,6 +175,25 @@ class Button:
         self.path.guiItem.set_state(0)
 
 
+class ToggleButton(Button):
+    def __init__(self, parent, state, off_text, on_text, pos=(0, 0), size=(0.4, 0.2), command=None, off_icon=None, on_icon=None, icon_style='solid', disabled=False, anchor=None):
+        self.state = state
+        self._command = command
+        self._text = (off_text, on_text)
+        self._icon = (off_icon, on_icon)
+        Button.__init__(self, parent, pos=pos, size=size, command=self.toggle, extraArgs=[], icon=off_icon, icon_style=icon_style, disabled=disabled, anchor=anchor)
+        self.set_text(self._text[state])
+        #self.set_icon(self._icon[state])
+
+    def toggle(self):
+        state = not self.state
+        self.state = state
+        if self._command:
+            self._command(state)
+        self.set_text(self._text[state])
+        #self.set_icon(self._icon[state])
+
+
 class Icon:
     def __init__(self, parent, icon='', pos=(0, 0), style='solid', anchor=None):
         parent_path = parent.path if anchor is None else parent.anchors[anchor]

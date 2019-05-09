@@ -257,8 +257,18 @@ class GameApp(ShowBase):
         screen = ui.Screen("hexima")
         self.continue_button = ui.Button(screen, '???', pos=(0.0, -0.15*0), command=self.continue_game)
         ui.Button(screen, 'select level', pos=(0.0, -0.15*1), command=self.show_level_select)
-        self.fullscreen_button = ui.Button(screen, 'fullscreen', pos=(0.0, -0.15*2), command=self.toggle_fullscreen)
-        self.music_button = ui.Button(screen, 'music: on', pos=(0.0, -0.15*3), command=self.toggle_music)
+        ui.ToggleButton(screen,
+            state=False,
+            on_text='windowed',
+            off_text='fullscreen',
+            pos=(0.0, -0.15*2),
+            command=self.toggle_fullscreen)
+        ui.ToggleButton(screen,
+            state=True,
+            off_text='music: off',
+            on_text='music: on',
+            pos=(0.0, -0.15*3),
+            command=self.toggle_music)
         ui.Button(screen, 'quit', pos=(0.0, -0.15*4), command=self.show_quit)
 
         self.load_save_state()
@@ -422,29 +432,25 @@ class GameApp(ShowBase):
         fp.close()
         self.update_level_overview({})
 
-    def toggle_fullscreen(self):
-        if not self.win.get_properties().fullscreen:
+    def toggle_fullscreen(self, fullscreen):
+        if fullscreen:
             print("Switching to fullscreen mode")
             size = self.pipe.get_display_width(), self.pipe.get_display_height()
             self.win.request_properties(core.WindowProperties(fullscreen=True, size=size))
-            self.fullscreen_button.set_text('windowed')
         else:
             print("Switching to windowed mode")
             size = core.WindowProperties.get_default().size
             self.win.request_properties(core.WindowProperties(fullscreen=False, size=size, origin=(-2, -2)))
-            self.fullscreen_button.set_text('fullscreen')
 
-    def toggle_music(self):
-        self.music_on = not self.music_on
+    def toggle_music(self, on):
+        self.music_on = on
 
-        if not self.music_on:
+        if not on:
             if self.playing_music:
                 self.playing_music.stop()
                 self.playing_music = None
-            self.music_button.set_text('music: off')
         else:
             self.ensure_music('menu')
-            self.music_button.set_text('music: on')
 
     def _get_save_path(self):
         if not __file__.endswith('.py'):
