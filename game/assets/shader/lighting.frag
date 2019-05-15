@@ -4,11 +4,11 @@
 
 uniform sampler2D p3d_Texture0;
 
-uniform struct {
+uniform struct p3d_LightModelParameters {
   vec4 ambient;
 } p3d_LightModel;
 
-uniform struct {
+uniform struct p3d_MaterialParameters {
   vec4 ambient;
   vec4 diffuse;
   vec3 specular;
