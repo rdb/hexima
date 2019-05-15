@@ -27,6 +27,7 @@ class PlayerControl(esper.Processor, DirectObject):
         self.accept('mouse1', self.start_drag)
         self.accept('mouse1-up', self.stop_drag)
         self.accept('r', self.on_reload)
+        self.accept('shift-h', self.move_auto)
 
         self.locked = True
         self.moving = False
@@ -99,6 +100,30 @@ class PlayerControl(esper.Processor, DirectObject):
             return
         die = self.world.component_for_entity(self.player, components.Die)
         die.move_right()
+
+    def move_auto(self):
+        if self.locked or self.moving:
+            return
+
+        die = self.world.component_for_entity(self.player, components.Die)
+        spatial = self.world.component_for_entity(self.player, components.Spatial)
+
+        level = self.world.level
+        cell = level.cells[(spatial.x, spatial.y)]
+
+        solutions = cell.solve(die.die)
+        if solutions:
+            solution = solutions[0]
+            print("Executing solution %s" % (solution))
+            for arrow in solution:
+                if arrow == '⇧':
+                    die.move_up()
+                elif arrow == '⇨':
+                    die.move_right()
+                elif arrow == '⇩':
+                    die.move_down()
+                elif arrow == '⇦':
+                    die.move_left()
 
     def start_move(self, dir):
         die = self.world.component_for_entity(self.player, components.Die)

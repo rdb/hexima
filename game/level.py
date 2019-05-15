@@ -164,14 +164,14 @@ class Level:
                     self.teleporters.append((i, len(self.rows)))
             self.rows.append(line)
 
-    def solve(self):
         # Build graph, starting from beginning.
-        cells = {}
-        begin_cell = self.__get_cell(cells, *self.entrance)
+        self.cells = {}
+        self.begin_cell = self.__get_cell(self.cells, *self.entrance)
 
-        # Find best solutions from begin cell.
+    def solve(self):
+        # Find best solutions.
         die = Die()
-        return begin_cell.solve(die)
+        return self.begin_cell.solve(die)
 
     def __get_cell(self, cells, x, y):
         cell = cells.get((x, y))
