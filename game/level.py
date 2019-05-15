@@ -1,9 +1,13 @@
 __all__ = ["Level", "TileType"]
 
+from .die import Die
+
 from enum import Enum
+from copy import copy
 
 
 class TileType(Enum):
+    # Order matters!  Add only to the end!
     entrance = 'b'
     exit = 'e'
     gate1 = '1'
@@ -13,14 +17,14 @@ class TileType(Enum):
     gate5 = '5'
     gate6 = '6'
     blank = '.'
-    blank2 = ','
-    void = None
     cracked = 'x'
     ice = 's'
     teleporter = 't'
     button = 'o'
     active = '/'
     inactive = '\\'
+
+    void = None
 
     def is_passable(self, dieval, toggle_state=False):
         if self.value is None:
@@ -61,14 +65,85 @@ class TileType(Enum):
             return "gfx/tile.bam"
 
 
+class Cell:
+    """ Abstract class for calculating solutions and level codes. """
+
+    def __init__(self, type):
+        self.type = type
+        self.neighbors = (None, None, None, None) # NESW
+
+    def solve(self, die):
+        solutions = []
+        self.r_solve(die, '', solutions, cracked=frozenset(), toggle_state=False, tested_states={})
+        return solutions
+
+    def r_solve(self, die, path, solutions, cracked, toggle_state, tested_states):
+        # Have we visited this cell before?
+        state = (self, die.top_number, die.east_number, die.north_number, toggle_state)
+        shortest_path = tested_states.get(state)
+        if shortest_path:
+            # We already went here in this state.
+            if len(shortest_path) < len(path):
+                # And last time we got here, we took a shorter path.
+                return
+
+        if solutions and len(path) > len(solutions[0]):
+            # Our current path is longer than a found solution, so forget it.
+            return
+
+        tested_states[state] = path
+
+        if self.type == TileType.cracked:
+            if self in cracked:
+                return
+            cracked = cracked | frozenset((self, ))
+
+        if not self.type.is_passable(die.bottom_number, toggle_state):
+            #print("%s: cannot move onto %s with number %d" % (path, self.type.name, die.bottom_number))
+            return
+
+        if self.type == TileType.exit:
+            if solutions:
+                if len(solutions[0]) > len(path):
+                    solutions.clear()
+            solutions.append(path)
+
+        if self.type == TileType.button:
+            toggle_state = not toggle_state
+
+        if self.neighbors[0]:
+            die_n = copy(die)
+            die_n.rotate_north()
+            self.neighbors[0].r_solve(die_n, path + '⇧', solutions=solutions, cracked=cracked, toggle_state=toggle_state, tested_states=tested_states)
+
+        if self.neighbors[1]:
+            die_e = copy(die)
+            die_e.rotate_east()
+            self.neighbors[1].r_solve(die_e, path + '⇨', solutions=solutions, cracked=cracked, toggle_state=toggle_state, tested_states=tested_states)
+
+        if self.neighbors[2]:
+            die_s = copy(die)
+            die_s.rotate_south()
+            self.neighbors[2].r_solve(die_s, path + '⇩', solutions=solutions, cracked=cracked, toggle_state=toggle_state, tested_states=tested_states)
+
+        if self.neighbors[3]:
+            die_w = copy(die)
+            die_w.rotate_west()
+            self.neighbors[3].r_solve(die_w, path + '⇦', solutions=solutions, cracked=cracked, toggle_state=toggle_state, tested_states=tested_states)
+
+
 class Level:
     def __init__(self):
         self.rows = []
         self.entrance = (0, 0)
+        self.teleporters = []
         self.par = None
+        self.key = None
+        self.begin_cell = None
 
     def read(self, fn):
         self.rows.clear()
+        self.teleporters.clear()
 
         for line in open(fn, 'r').readlines():
             line = line.rstrip()
@@ -78,9 +153,59 @@ class Level:
                 self.par = int(line)
                 continue
 
-            if 'b' in line:
-                self.entrance = line.index('b'), len(self.rows)
+            # Ignore empty lines at the beginning.
+            if not self.rows and not line.strip():
+                continue
+
+            for i, c in enumerate(line):
+                if c == 'b':
+                    self.entrance = i, len(self.rows)
+                if c == 't':
+                    self.teleporters.append((i, len(self.rows)))
             self.rows.append(line)
+
+    def solve(self):
+        # Build graph, starting from beginning.
+        cells = {}
+        begin_cell = self.__get_cell(cells, *self.entrance)
+
+        # Find best solutions from begin cell.
+        die = Die()
+        return begin_cell.solve(die)
+
+    def __get_cell(self, cells, x, y):
+        cell = cells.get((x, y))
+        if cell:
+            return cell
+
+        type = self.get_tile(x, y)
+        if type == TileType.void:
+            return None
+
+        cell = Cell(type)
+        cells[(x, y)] = cell
+
+        # Neighbors: NESW
+        neighbors = []
+        for xo, yo in (0, 1), (1, 0), (0, -1), (-1, 0):
+            nx = x + xo
+            ny = y + yo
+            ncell = self.__get_cell(cells, nx, ny)
+
+            while ncell and ncell.type == TileType.ice:
+                nx += xo
+                ny += yo
+                ncell = self.__get_cell(cells, nx, ny)
+
+            if ncell and ncell.type == TileType.teleporter and len(self.teleporters) >= 2:
+                i = self.teleporters.index((nx, ny))
+                nx, ny = self.teleporters[(i + 1) % len(self.teleporters)]
+                ncell = self.__get_cell(cells, nx, ny)
+
+            neighbors.append(ncell)
+
+        cell.neighbors = tuple(neighbors)
+        return cell
 
     def find_tile(self, type):
         "Returns the coordinates of the first tile with the given type."
