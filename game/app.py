@@ -6,6 +6,7 @@ import direct.gui.DirectGuiGlobals as DGG
 from direct.interval.IntervalGlobal import Sequence, Func, LerpFunctionInterval, Wait
 from panda3d import core
 import json
+import math
 import os
 
 from .world import World
@@ -120,6 +121,10 @@ class GameApp(ShowBase):
         dev_mgr = core.InputDeviceManager.get_global_ptr()
         for device in dev_mgr.get_devices(core.InputDevice.DeviceClass.gamepad):
             self.on_connect_device(device)
+
+        self.gamepad_lstick_angle = None
+        self.win_input = self.win.get_input_device(0)
+        self.task_mgr.add(self.process_input)
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -581,6 +586,35 @@ class GameApp(ShowBase):
 
     def __del__(self):
         core.unload_prc_file(self.settings)
+
+    def process_input(self, task):
+        lstick_angle = 0.0
+        lstick_force = 0.0
+
+        for gamepad in self.gamepads:
+            left_x = gamepad.find_axis(core.InputDevice.Axis.left_x)
+            left_y = gamepad.find_axis(core.InputDevice.Axis.left_y)
+            if left_x.known and left_y.known:
+                v = core.Vec2(left_x.value, left_y.value)
+                r = v.length_squared()
+                if r > lstick_force:
+                    lstick_angle = math.degrees(math.atan2(v.x, v.y)) % 360
+                    lstick_force = r
+
+        if lstick_force > 0.5 ** 2:
+            if self.gamepad_lstick_angle is None:
+                dir = int(round(lstick_angle / (360.0 / 8.0)))
+                if dir == 8 or dir == 0:
+                    self.win_input.button_down('lstick_up')
+                    self.win_input.button_up('lstick_up')
+                elif dir == 4:
+                    self.win_input.button_down('lstick_down')
+                    self.win_input.button_up('lstick_down')
+            self.gamepad_lstick_angle = lstick_angle
+        elif lstick_force < 0.25 ** 2:
+            self.gamepad_lstick_angle = None
+
+        return task.cont
 
     def process_world(self, task):
         self.world.process(globalClock.dt)

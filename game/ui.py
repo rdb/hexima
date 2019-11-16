@@ -320,8 +320,10 @@ class Screen:
         if prev is not None:
             prev.bind('press-arrow_down-', lambda p: item.guiItem.set_focus(True))
             prev.bind('press-dpad_down-', lambda p: item.guiItem.set_focus(True))
+            prev.bind('press-lstick_down-', lambda p: item.guiItem.set_focus(True))
             item.bind('press-arrow_up-', lambda p: prev.guiItem.set_focus(True))
             item.bind('press-dpad_up-', lambda p: prev.guiItem.set_focus(True))
+            item.bind('press-lstick_up-', lambda p: prev.guiItem.set_focus(True))
 
         sound = item['clickSound']
         if sound:
@@ -334,8 +336,10 @@ class Screen:
         if sound:
             item.guiItem.set_sound('press-arrow_up-' + item.guiId, sound)
             item.guiItem.set_sound('press-dpad_up-' + item.guiId, sound)
+            item.guiItem.set_sound('press-lstick_up-' + item.guiId, sound)
             item.guiItem.set_sound('press-arrow_down-' + item.guiId, sound)
             item.guiItem.set_sound('press-dpad_down-' + item.guiId, sound)
+            item.guiItem.set_sound('press-lstick_down-' + item.guiId, sound)
 
         self._prev_item = item
         if self._first_item is None:

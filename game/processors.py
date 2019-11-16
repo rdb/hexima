@@ -310,6 +310,7 @@ class PlayerControl(esper.Processor, DirectObject):
 
         die = self.world.component_for_entity(self.player, components.Die)
         spatial = self.world.component_for_entity(self.player, components.Spatial)
+        cam_spatial = self.world.component_for_entity(self.camera, components.Spatial)
 
         if self.reload:
             self.reload = False
@@ -322,12 +323,16 @@ class PlayerControl(esper.Processor, DirectObject):
             if ptr.in_window:
                 x = (self.dragging_pos[0] - ptr.x) * MOUSE_SENSITIVITY
                 y = (self.dragging_pos[1] - ptr.y) * MOUSE_SENSITIVITY
-                spatial = self.world.component_for_entity(self.camera, components.Spatial)
-                spatial.path.set_hpr(spatial.default_hpr[0] + x, max(min(spatial.default_hpr[1] + y, 0), -90), 0)
+                cam_spatial.path.set_hpr(cam_spatial.default_hpr[0] + x, max(min(cam_spatial.default_hpr[1] + y, 0), -90), 0)
 
         if die.moves:
             if not self.start_move(die.moves.pop(0)):
                 die.moves.clear()
+
+        # Check gamepad stick input.
+        if base.gamepad_lstick_angle is not None:
+            dir = int(round(((base.gamepad_lstick_angle - cam_spatial.path.get_h()) / (360 / 4))) % 4)
+            self.start_move('NESW'[dir])
 
 
 class Gravity(esper.Processor):
