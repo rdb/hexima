@@ -27,7 +27,7 @@ class PlayerControl(esper.Processor, DirectObject):
         self.accept('mouse1', self.start_drag)
         self.accept('mouse1-up', self.stop_drag)
         self.accept('r', self.on_reload)
-        self.accept('shift-h', self.move_auto)
+        #self.accept('shift-h', self.move_auto)
 
         self.locked = True
         self.moving = False
