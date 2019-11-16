@@ -56,6 +56,10 @@ class Die:
     def move_right(self):
         self.moves.append('E')
 
+    def move(self, dir):
+        assert dir in 'NSWE'
+        self.moves.append(dir)
+
 
 class Model:
     def __init__(self, model, offset=None, hpr=None, scale=None):

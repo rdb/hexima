@@ -16,14 +16,14 @@ class PlayerControl(esper.Processor, DirectObject):
         self.player = player
         self.camera = camera
 
-        self.accept('arrow_up', self.move_up)
-        self.accept('arrow_down', self.move_down)
-        self.accept('arrow_left', self.move_left)
-        self.accept('arrow_right', self.move_right)
-        self.accept('dpad_up', self.move_up)
-        self.accept('dpad_down', self.move_down)
-        self.accept('dpad_left', self.move_left)
-        self.accept('dpad_right', self.move_right)
+        self.accept('arrow_up', self.move, ['N'])
+        self.accept('arrow_down', self.move, ['S'])
+        self.accept('arrow_left', self.move, ['E'])
+        self.accept('arrow_right', self.move, ['W'])
+        self.accept('dpad_up', self.move, ['N'])
+        self.accept('dpad_down', self.move, ['S'])
+        self.accept('dpad_left', self.move, ['E'])
+        self.accept('dpad_right', self.move, ['W'])
         self.accept('mouse1', self.start_drag)
         self.accept('mouse1-up', self.stop_drag)
         self.accept('r', self.on_reload)
@@ -69,37 +69,27 @@ class PlayerControl(esper.Processor, DirectObject):
         if ptr.in_window:
             self.dragging_pos = ptr.x, ptr.y
 
+            spatial = self.world.component_for_entity(self.camera, components.Spatial)
+            self.dragging_initial_hpr = spatial.path.get_hpr()
+
     def stop_drag(self):
         if self.dragging_pos:
             self.dragging_pos = None
 
-            spatial = self.world.component_for_entity(self.camera, components.Spatial)
-            self.restore_interval = spatial.path.hprInterval(0.3, spatial.default_hpr, blendType='easeOut')
-            self.restore_interval.start()
+            #spatial = self.world.component_for_entity(self.camera, components.Spatial)
+            #self.restore_interval = spatial.path.hprInterval(0.3, spatial.default_hpr, blendType='easeOut')
+            #self.restore_interval.start()
 
-    def move_up(self):
+    def move(self, dir):
         if self.locked:
             return
-        die = self.world.component_for_entity(self.player, components.Die)
-        die.move_up()
 
-    def move_down(self):
-        if self.locked:
-            return
         die = self.world.component_for_entity(self.player, components.Die)
-        die.move_down()
+        cam_spatial = self.world.component_for_entity(self.camera, components.Spatial)
 
-    def move_left(self):
-        if self.locked:
-            return
-        die = self.world.component_for_entity(self.player, components.Die)
-        die.move_left()
-
-    def move_right(self):
-        if self.locked:
-            return
-        die = self.world.component_for_entity(self.player, components.Die)
-        die.move_right()
+        dir = 'NESW'.index(dir)
+        dir = int(round((-cam_spatial.path.get_h() / (360 / 4) - dir)) % 4)
+        die.move('NESW'[dir])
 
     def move_auto(self):
         if self.locked or self.moving:
@@ -323,7 +313,7 @@ class PlayerControl(esper.Processor, DirectObject):
             if ptr.in_window:
                 x = (self.dragging_pos[0] - ptr.x) * MOUSE_SENSITIVITY
                 y = (self.dragging_pos[1] - ptr.y) * MOUSE_SENSITIVITY
-                cam_spatial.path.set_hpr(cam_spatial.default_hpr[0] + x, max(min(cam_spatial.default_hpr[1] + y, 0), -90), 0)
+                cam_spatial.path.set_hpr(self.dragging_initial_hpr[0] + x, max(min(self.dragging_initial_hpr[1] + y, 0), -90), 0)
 
         if die.moves:
             if not self.start_move(die.moves.pop(0)):

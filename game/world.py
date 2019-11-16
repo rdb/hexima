@@ -42,6 +42,7 @@ class World(esper.World):
         self.add_component(camera, components.Camera(base.camera, fov=90, pos=(0, -8, 0), look_at=(0, 0, 0)))
         self.add_component(camera, components.Spatial(parent=self.root, hpr=(-26.5651, -48.1897, 0)))#153.435, 48.1897, 0))) #
         self.add_component(camera, components.Compass(player, 'xy'))
+        self.camera = camera
 
         self.player_control = processors.PlayerControl(player, camera)
         self.add_processor(self.player_control)
@@ -303,6 +304,7 @@ class World(esper.World):
         self.setup()
         level_root.set_z(7)
 
+        cam_spatial = self.component_for_entity(self.camera, components.Spatial)
         Sequence(
             Parallel(
                self.old_level_root.posInterval(2.0, (self.old_level_root.get_x(), self.old_level_root.get_y(), self.old_level_root.get_z() - 10), blendType='easeOut'),
@@ -311,6 +313,7 @@ class World(esper.World):
                spatial.path.hprInterval(2.0, (0, 0, 0), blendType='easeInOut'),
                entrance_tile_path.hprInterval(2.0, (0, 0, 0), blendType='easeInOut'),
                entrance_tile_path.colorScaleInterval(2.0, (1, 1, 1, 1), blendType='easeInOut'),
+               cam_spatial.path.hprInterval(2.0, cam_spatial.default_hpr, blendType='easeOut'),
             ),
             Func(self.on_level_start),
         ).start()
