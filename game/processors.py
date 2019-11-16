@@ -124,6 +124,8 @@ class PlayerControl(esper.Processor, DirectObject):
                     die.move_down()
                 elif arrow == '⇦':
                     die.move_left()
+        else:
+            print("There is no solution!  Restart the level.")
 
     def start_move(self, dir):
         die = self.world.component_for_entity(self.player, components.Die)
